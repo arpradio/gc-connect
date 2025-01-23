@@ -139,7 +139,7 @@ export default function AlbumPreview({
           src={coverArtPreview}
           alt="Album Cover"
           fill
-          className="object-cover rounded-lg shadow-lg"
+          className="object-cover border-[1px] border-neutral-500 rounded-lg shadow-lg"
         />
       </div>
 
@@ -218,11 +218,11 @@ export default function AlbumPreview({
         </div>
       </div>
 
-      <div className="mt-6 text-center text-sm text-gray-400 space-y-1">
+      <div className="mt-6 text-center mx-auto text-sm text-gray-400 flex justify-between w-fit px-4 ">
         {!albumMetadata.copyright.composition.includes('AI Generated') && (
-          <p>{albumMetadata.copyright.composition}</p>
+          <p className="mx-2">© {albumMetadata.copyright.composition}</p> 
         )}
-        <p>{albumMetadata.copyright.master}</p>
+        <p className="mx-2"> ℗ {albumMetadata.copyright.master}</p>
       </div>
     </div>
   );

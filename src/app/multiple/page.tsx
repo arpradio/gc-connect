@@ -124,8 +124,7 @@ export default function MultiSongMinter() {
     setError('');
 
     try {
-      // Get or generate cover art CID first
-      let sharedCoverCID = uploadedCIDs[0]?.coverCID;  // Use the first track's cover CID slot
+      let sharedCoverCID = uploadedCIDs[0]?.coverCID;  
       
       if (!sharedCoverCID && coverArtFile) {
         const coverBuffer = await coverArtFile.arrayBuffer();
@@ -167,16 +166,16 @@ export default function MultiSongMinter() {
         return {
           ...song,
           songCID,
-          coverCID: sharedCoverCID,  // Use the shared cover CID for all tracks
+          coverCID: sharedCoverCID,
           duration,
         };
       }));
 
       const gcscript = {
         type: "script",
-        title: "CIP-60 Album Token Minting",
-        description: "CIP-60 compliant album/EP token minting script",
-        exportAs: "CIP-60-Album",
+        title: "Multiple Song Token Minting",
+        description: "CIP-60 compliant music compilation/collection token minting script",
+        exportAs: "CIP-60-Multi",
         return: { mode: "last" },
         run: {
           dependencies: {
@@ -217,7 +216,7 @@ export default function MultiSongMinter() {
           },
           build: {
             type: "buildTx",
-            name: "built-CIP60-Album",
+            name: "built-CIP60-Multi",
             tx: {
               ttl: { until: "{get('cache.dependencies.deadlineSlotNumber')}" },
               mints: [{
@@ -236,11 +235,11 @@ export default function MultiSongMinter() {
                 "721": {
                   "{get('cache.dependencies.mintingPolicy.scriptHashHex')}": {
                     "{get('cache.dependencies.assetName')}": {
-                      name: `${processedSongs[0].artists[0].name} - ${releaseTitle}`,
+                      name: releaseTitle,
                       image: `ipfs://${processedSongs[0].coverCID}`,
                       music_metadata_version: 3,
                       release: {
-                        release_type: "Album/EP",
+                        release_type: "Multiple",
                         release_title: releaseTitle,
                       },
                       files: processedSongs.map((song, index) => ({
@@ -377,11 +376,11 @@ export default function MultiSongMinter() {
             required
           />
         </div>
-
-        <div className="my-4 items-center">
-          <label htmlFor="coverArtFile" className="block text-lg font-bold text-white">
+        <label htmlFor="coverArtFile" className="block text-lg font-bold text-white">
             Cover Art* {coverArtFile?.name && `(${coverArtFile.name})`}
           </label>
+        <div className="mb-6 rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto ">
+         
           <input
             type="file"
             id="coverArtFile"
@@ -389,7 +388,9 @@ export default function MultiSongMinter() {
             onChange={handleCoverArtChange}
             accept="image/*"
             required
-            className="block w-fit mx-auto border-2 rounded p-2 text-white"
+            className="w-full text-white file:mr-4 file:py-2 file:px-4 
+                      file:rounded-full file:border-0 file:text-sm file:font-semibold 
+                      file:bg-blue-600 file:text-white hover:file:bg-blue-500"
           />
         </div>
 
@@ -456,7 +457,7 @@ export default function MultiSongMinter() {
               <span>Preparing Transaction...</span>
             </>
           ) : (
-            <span className="text-white">Mint Album</span>
+            <span className="text-white">Mint Token</span>
           )}
         </button>
 

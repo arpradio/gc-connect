@@ -88,13 +88,11 @@ export default function Page() {
   const handleCoverArtChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target?.files?.[0];
     if (file) {
-      // Update form state with the new file
       setFormState(prev => ({
         ...prev,
         coverArtFile: file
       }));
       
-      // Trigger file selection handling for Pinata
       handleFileSelect('cover', file);
     }
   };
@@ -367,11 +365,11 @@ export default function Page() {
             onNetworkChange={setNetwork}
           />
           <hr className='mb-6'/>
-     
-        <div className='my-4 items-center'>
           <label htmlFor="coverArtFile" className="block text-lg font-bold text-white">
             Cover Art* {formState.coverArtFile?.name && '(Selected)'}
           </label>
+        <div className='my-4 rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto '>
+       
           <input
             type="file"
             id="coverArtFile"
@@ -379,7 +377,9 @@ export default function Page() {
             onChange={handleCoverArtChange}
             accept="image/*"
             required
-            className="block w-fit mx-auto border-2  rounded p-2 text-white"
+            className="w-full text-white file:mr-4 file:py-2 file:px-4 
+                      file:rounded-full file:border-0 file:text-sm file:font-semibold 
+                      file:bg-blue-600 file:text-white hover:file:bg-blue-500"
           />
         </div>
 

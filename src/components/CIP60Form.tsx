@@ -495,12 +495,12 @@ export default function CIP60Form({ formState, onFormChange, onFileSelect }: CIP
       </div>
 
 
-
-      <div className="bg-black pt-2 pb-4 rounded-xl border-[1px] items-center border-color-silver">
-        
-          <label htmlFor="songFile" className="block text-sm font-medium text-white">
+      <label htmlFor="songFile" className="block text-lg h-2 font-medium text-white">
             Song File* {formState.songFile?.name && '(Selected)'}
           </label>
+      <div className="bg-black p-4 w-fit mx-auto  rounded-xl border-[1px] items-center border-color-silver">
+        
+         
           <input
             type="file"
             id="songFile"
@@ -508,7 +508,9 @@ export default function CIP60Form({ formState, onFormChange, onFileSelect }: CIP
             onChange={handleFileChange}
             accept="audio/*"
             required
-            className="block m-auto w-fit text-white mx-auto"
+            className="w-full text-white file:mr-4 file:py-2 file:px-4 
+                      file:rounded-full file:border-0 file:text-sm file:font-semibold 
+                      file:bg-blue-600 file:text-white hover:file:bg-blue-500"
           />
         
 

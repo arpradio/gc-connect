@@ -1,15 +1,9 @@
 
 export interface Artist {
-  id: string;
+  id: string; 
   name: string;
   isni?: string;
   links: Record<string, string>;
-}
-
-export interface ContributingArtist extends Artist {
-  ipn?: string;
-  ipi?: string;
-  roles: string[];
 }
 
 export interface Author {
@@ -24,6 +18,42 @@ export interface PinataResponse {
   success: boolean;
   cid?: string;
   error?: string;
+}
+
+export interface TrackFormProps {
+  track: TrackFormData;
+  onChange: (track: TrackFormData) => void;
+  onFileSelect: (file: File) => void;
+  trackNumber: number;
+}
+
+export interface TrackFormData {
+  songTitle: string;
+  trackNumber: string;
+  songFile: File | null;
+  isAIGenerated: boolean;
+  isExplicit: boolean;
+  featuredArtists: Artist[];
+  authors: Author[];
+  producer?: string;
+  mixEngineer?: string;
+  masteringEngineer?: string;
+  isrc?: string;
+  iswc?: string;
+}
+export interface ContributingArtist extends Artist {
+  ipn?: string;
+  ipi?: string;
+  roles: string[]; // Make roles non-optional
+}
+export interface AlbumMetadata {
+  artists: Artist[];
+  contributingArtists: ContributingArtist[];
+  genres: string[];
+  copyright: {
+    master: string;
+    composition: string;
+  };
 }
 
 export interface PinataUploadResponse {

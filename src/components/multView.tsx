@@ -71,19 +71,20 @@ export default function MultiSongPreview({ songs, albumTitle, coverArtFile }: Mu
       <h2 className="text-2xl font-bold text-center mb-4 text-white">
         {albumTitle || 'Multiple Track Release'}
       </h2>
-      <div className="flex flex-col md:flex-row gap-6 mb-6">
-        <div className="md:w-1/3">
-          <div className="relative w-full aspect-square">
+      <div className="  m-auto items-center justify-center  mb-6">
+        <div className="block mx-auto w-full">
+          <div className=" w-fit mx-auto flex aspect-square">
             <Image
               src={coverArtPreview}
               alt="Cover Art"
-              fill
-              className="object-cover rounded-lg shadow-lg"
+              width={300}
+              height={300}
+              className="object-cover self-center items-center m-auto border-[1px] border-neutral-500 rounded-lg shadow-lg"
             />
           </div>
         </div>
 
-        <div className="md:w-2/3 space-y-4">
+        <div className="md:w-full space-y-4">
           {songs.map((song, index) => (
             <div key={index} className="bg-gray-800/50 rounded-lg p-4 hover:bg-gray-800/70 transition-colors">
               <div className="flex items-center gap-4">

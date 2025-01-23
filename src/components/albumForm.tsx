@@ -1,4 +1,3 @@
-// AlbumMetadataForm.tsx
 import { useState } from 'react';
 import { Artist, ContributingArtist } from '@/types';
 import ArtistForm from "./artistForm";
@@ -53,7 +52,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
   };
 
   const handleRemoveArtist = (index: number) => {
-    if (index === 0) return; // Don't remove the main artist
+    if (index === 0) return; 
     setMetadata(prev => ({
       ...prev,
       artists: prev.artists.filter((_, i) => i !== index)
@@ -117,7 +116,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-white">Album Artists</h3>
+        <h3 className="text-lg text-center font-mono font-bold text-white">Album Artists</h3>
         {metadata.artists.map((artist, index) => (
           <ArtistForm
             key={artist.id}
@@ -139,7 +138,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-white">Album Genres</h3>
+        <h3 className="text-lg font-bold text-center font-mono text-white">Album Genres</h3>
         <div className="grid grid-cols-3 gap-4">
           <select
             value={metadata.genres[0] || ''}
@@ -147,9 +146,23 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             className="bg-gray-700 text-white rounded p-2"
           >
             <option value="">Primary Genre</option>
-            <option value="Alternative">Alternative</option>
-            <option value="Electronic">Electronic</option>
-            {/* Add other genre options */}
+            
+          <option value="Alternative">Alternative</option>
+          <option value="Avant-Garde/Experimental">Avant-Garde/Experimental</option>
+          <option value="Blues">Blues</option>
+          <option value="Classical">Classical</option>
+          <option value="Country">Country</option>
+          <option value="Easy Listening">Easy Listening</option>
+          <option value="Electronic">Electronic</option>
+          <option value="Folk">Folk</option>
+          <option value="Hip-Hop/Rap">Hip-Hop/Rap</option>
+          <option value="Jazz">Jazz</option>
+          <option value="Latin">Latin</option>
+          <option value="Metal">Metal</option>
+          <option value="Punk">Punk</option>
+          <option value="RnB">RnB</option>
+          <option value="Rock">Rock</option>
+          <option value="World">World</option>
           </select>
           
           <input

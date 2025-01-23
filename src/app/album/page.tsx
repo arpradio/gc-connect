@@ -11,30 +11,18 @@ import { CIP60FormData } from '@/types';
 import * as IpfsOnlyHash from 'ipfs-only-hash';
 import { PlusCircle, Trash2, ArrowDown, ArrowUp } from 'lucide-react';
 import TrackForm from '@/components/trackForm';
-import { TrackFormData , Artist } from '@/types';
+import { TrackFormData, Artist, ContributingArtist, AlbumMetadata } from '@/types';
 
 const GAMECHANGER_SDK_URL = "https://cdn.jsdelivr.net/npm/@gamechanger-finance/gc@0.1/dist/browser.min.js";
 
-interface AlbumMetadata {
-  artists: Artist[];
-  contributingArtists: ContributingArtist[];
-  genres: string[];
-  copyright: {
-    master: string;
-    composition: string;
-  };
-}
-
-
-
 const initialTrackState: TrackFormData = {
   songTitle: '',
-  trackNumber: '1',  // Add this required field
+  trackNumber: '1',  
   songFile: null,
   isAIGenerated: false,
   isExplicit: false,
   featuredArtists: [],
-  authors: [],    // Add this required field
+  authors: [],    
   mixEngineer: '',
   masteringEngineer: '',
   producer: '',
@@ -53,21 +41,28 @@ export default function AlbumMinter() {
   }>({});
 
   const [releaseTitle, setReleaseTitle] = useState('');
+  const [master, setMaster] = useState('');
+  const [composition, setComposition] = useState('');
   const [distributor, setDistributor] = useState('');
   const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
   const [albumMetadata, setAlbumMetadata] = useState<AlbumMetadata>({
-    artists: [{ id: 'main', name: '', isni: '', links: {} }],
+    artists: [{ 
+      id: 'main', 
+      name: '', 
+      isni: '', 
+      links: {},
+    }],
     contributingArtists: [],
     genres: [],
     copyright: {
-      master: '',
-      composition: ''
+      master: master,
+      composition: composition 
     }
   });
   const [tracks, setTracks] = useState<TrackFormData[]>([{...initialTrackState}]);
 
   const handleAddTrack = () => setTracks(prev => [...prev, {...initialTrackState}]);
-
+  
   const handleRemoveTrack = (index: number) => {
     setTracks(prev => prev.filter((_, i) => i !== index));
   };
@@ -83,6 +78,16 @@ export default function AlbumMinter() {
       return newTracks;
     });
   };
+
+  useEffect(() => {
+    setAlbumMetadata(prev => ({
+      ...prev,
+      copyright: {
+        master,
+        composition
+      }
+    }));
+  }, [master, composition]);
 
   const handleTrackUpdate = (index: number, updatedForm: TrackFormData | ((prev: TrackFormData) => TrackFormData)) => {
     setTracks(prev => {
@@ -141,22 +146,21 @@ export default function AlbumMinter() {
     setError('');
 
     try {
-      // Validate required fields
       if (!coverArtFile) throw new Error('Cover art is required');
       if (!releaseTitle) throw new Error('Release title is required');
+      if (!master) throw new Error("Master Copyright is required");
+      if (!composition) throw new Error("Composition Copyright is required")
       if (!albumMetadata.artists[0].name) throw new Error('Main artist is required');
       if (!albumMetadata.copyright.master) throw new Error('Recording copyright is required');
       if (!albumMetadata.copyright.composition) throw new Error('Composition copyright is required');
       if (tracks.length === 0) throw new Error('At least one track is required');
 
-      // Process cover art
       let coverCID = uploadedCIDs[0]?.coverCID;
       if (!coverCID) {
         const coverBuffer = await coverArtFile.arrayBuffer();
         coverCID = await IpfsOnlyHash.of(Buffer.from(coverBuffer));
       }
 
-      // Process tracks
       const processedTracks = await Promise.all(tracks.map(async (track, index) => {
         if (!track.songFile) throw new Error(`Audio file required for track ${index + 1}`);
         if (!track.songTitle) throw new Error(`Title required for track ${index + 1}`);
@@ -167,7 +171,6 @@ export default function AlbumMinter() {
           songCID = await IpfsOnlyHash.of(Buffer.from(songBuffer));
         }
 
-        // Get audio duration
         const audio = new Audio();
         const songUrl = URL.createObjectURL(track.songFile);
         audio.src = songUrl;
@@ -190,11 +193,12 @@ export default function AlbumMinter() {
           duration
         };
       }));
+
       const metadata = {
         "721": {
           "{get('cache.dependencies.mintingPolicy.scriptHashHex')}": {
             "{get('cache.dependencies.assetName')}": {
-              name: `${albumMetadata.artists[0].name} - ${releaseTitle}`,
+              name: releaseTitle,
               image: `ipfs://${coverCID}`,
               music_metadata_version: 3,
               release: {
@@ -216,8 +220,8 @@ export default function AlbumMinter() {
                   }))
                 }),
                 copyright: {
-                  master: `℗ ${albumMetadata.copyright.master}`,
-                  composition: `© ${albumMetadata.copyright.composition}`
+                  master: `℗ ${master}`,
+                  composition: `© ${composition}`
                 },
                 genres: albumMetadata.genres.filter(Boolean)
               },
@@ -229,8 +233,8 @@ export default function AlbumMinter() {
                   song_title: track.songTitle,
                   song_duration: `PT${track.duration.minutes}M${track.duration.seconds}S`,
                   track_number: (index + 1).toString(),
-                  ...(track.isExplicit && { explicit: true }),
-                  ...(track.isAIGenerated && { ai_generated: true }),
+                  ...(track.isExplicit && { explicit: `true` }),
+                  ...(track.isAIGenerated && { ai_generated: `true` }),
                   
                   ...(track.featuredArtists?.length > 0 && {
                     featured_artists: track.featuredArtists.map(artist => ({
@@ -241,8 +245,8 @@ export default function AlbumMinter() {
                   }),
       
                   ...(track.producer && { producer: track.producer }),
-                  ...(track.mastering_engineer && { mastering_engineer: track.mastering_engineer }),
-                  ...(track.mix_engineer && { mix_engineer: track.mix_engineer }),
+                  ...(track.masteringEngineer && { mastering_engineer: track.masteringEngineer }),
+                  ...(track.mixEngineer && { mix_engineer: track.mixEngineer }),
                   
                   ...(track.isrc && { isrc: track.isrc }),
                   ...(!track.isAIGenerated && track.iswc && { iswc: track.iswc })
@@ -339,183 +343,13 @@ export default function AlbumMinter() {
       
       window.open(gcUrl, '_blank', 'width=400,height=600');
       
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        console.error('Minting error:', err);
-      } finally {
-        setLoading(false);
-      };
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = GAMECHANGER_SDK_URL;
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  return (
-    <main className="min-h-screen p-4 bg-gradient-to-tl from-[#03215f] via-[#008a7a] to-[#460084]">
-      <div className="max-w-4xl mx-auto bg-black/80 p-8 rounded-lg shadow-xl border-2 border-white">
-        <Link href="/">
-          <div className='fixed text-white hover:bg-blue-600 bg-black p-2 rounded border-white border-[1px]'>
-            BACK
-          </div>
-        </Link>
-        
-        <div className="text-center mb-6">
-          <a href="https://psyencelab.media" target="_blank" rel="noopener noreferrer">
-            <Image src="/psyencelab.png" alt="PsyenceLab" width={400} height={100} className="mx-auto border-[1px] rounded-md" priority />
-          </a>
-          <h1 className="text-2xl mt-2 font-mono text-white">Album/EP Token Minting</h1>
-          <NetworkSelector selectedNetwork={network} onNetworkChange={setNetwork} />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-lg font-bold text-white mb-2">
-            Release Title*
-          </label>
-          <input
-            type="text"
-            value={releaseTitle}
-            onChange={(e) => setReleaseTitle(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-600"
-            placeholder="Enter release title"
-            required
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-lg font-bold text-white mb-2">
-            Distributor
-          </label>
-          <input
-            type="text"
-            value={distributor}
-            onChange={(e) => setDistributor(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-600"
-            placeholder="Enter distributor name (optional)"
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-lg font-bold text-white mb-2">
-            Cover Art*
-          </label>
-          <input
-            type="file"
-            id="coverArtFile"
-            name="coverArtFile"
-            onChange={handleCoverArtChange}
-            accept="image/*"
-            required
-            className="block w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer"
-          />
-          {coverArtFile && (
-            <p className="mt-2 text-sm text-gray-400">
-              Selected: {coverArtFile.name}
-            </p>
-          )}
-        </div>
-
-        {tracks.map((song, index) => (
-          <div key={index} className="mb-8 p-6 bg-gray-900/50 rounded-lg border border-gray-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-white">Track {index + 1}</h2>
-              <div className="flex gap-2">
-                {index > 0 && (
-                  <button onClick={() => handleMoveTrack(index, 'up')} className="p-2 text-blue-400 hover:text-blue-300">
-                    <ArrowUp size={20} />
-                  </button>
-                )}
-                {index < tracks.length - 1 && (
-                  <button onClick={() => handleMoveTrack(index, 'down')} className="p-2 text-blue-400 hover:text-blue-300">
-                    <ArrowDown size={20} />
-                  </button>
-                )}
-                {tracks.length > 1 && (
-                  <button onClick={() => handleRemoveTrack(index)} className="p-2 text-red-400 hover:text-red-300">
-                    <Trash2 size={20} />
-                  </button>
-                )}
-              </div>
-            </div>
-            
-            
-            <TrackForm
-  track={tracks}
-  onChange={(newTrack) => handleTrackUpdate(index, newTrack)}
-  onFileSelect={(file) => handleFileSelect({ type: 'song', index }, file)}
-  trackNumber={index + 1}  
-/>
-          </div>
-        ))}
-
-        <button
-          onClick={handleAddTrack}
-          className="w-full py-3 mb-6 flex items-center justify-center gap-2 bg-blue-600 text-white rounded hover:bg-blue-500"
-        >
-          <PlusCircle size={20} />
-          Add Track
-        </button>
-
-        {tracks.length > 0 && (
-          <AlbumPreview 
-            songs={tracks} 
-            albumTitle={releaseTitle} 
-            coverArtFile={coverArtFile} 
-            distributor={distributor}
-          />
-        )}
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded text-red-500">
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={handleMint}
-          disabled={loading || tracks.length === 0 || !releaseTitle || !coverArtFile}
-          className={`
-            mt-6 w-full py-4 px-8 rounded-lg font-bold text-xl
-            flex items-center justify-center gap-2 border border-white
-            ${loading || tracks.length === 0 || !releaseTitle || !coverArtFile 
-              ? 'bg-gray-800 cursor-not-allowed' 
-              : 'bg-purple-600 hover:bg-purple-500'
-            }
-            transition-colors duration-200
-          `}
-        >
-          {loading ? (
-            <>
-              <Image src="/album.gif" alt="Loading..." width={80} height={80} priority />
-              <span>Preparing Transaction...</span>
-            </>
-          ) : (
-            <span className="text-white">Mint Album</span>
-          )}
-        </button>
-
-        {showPinataModal && selectedFileType && (
-          <PinataModal
-            isOpen={showPinataModal}
-            onClose={() => {
-              setShowPinataModal(false);
-              setSelectedFileType(null);
-            }}
-            file={selectedFileType.type === 'song' 
-              ? tracks[selectedFileType.index].songFile 
-              : coverArtFile}
-            onUploadSuccess={handlePinataUploadSuccess}
-          />
-        )}
-      </div>
-    </main>
-  );
-};
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      console.error('Minting error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 useEffect(() => {
   const script = document.createElement('script');
@@ -540,8 +374,19 @@ return (
         <a href="https://psyencelab.media" target="_blank" rel="noopener noreferrer">
           <Image src="/psyencelab.png" alt="PsyenceLab" width={400} height={100} className="mx-auto border-[1px] rounded-md" priority />
         </a>
-        <h1 className="text-2xl mt-2 font-mono text-white">Album/EP Token Minting</h1>
-        <NetworkSelector selectedNetwork={network} onNetworkChange={setNetwork} />
+           <h1 className="text-2xl mt-2 font-mono text-white">Be Your Own Minter!</h1>
+                    <h2 className="text-xl font-bold text-[#228fa7] mt-4 text-shadow">
+                      Album/EP Token Minting
+                    </h2>
+                    <p className="text-white/80 italic text-xs">
+                      A CIP60-compliant music token minting script for a collection of works of the same artist.
+                    </p>
+                    
+                    <NetworkSelector
+                      selectedNetwork={network}
+                      onNetworkChange={setNetwork}
+                    />
+                    <hr className='mb-6'/>
       </div>
 
       <div className="space-y-6">
@@ -576,21 +421,22 @@ return (
               />
             </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-white mb-1">
+          <label className="block text-xl font-medium text-white mb-1">
               Cover Art*
             </label>
+          <div className='rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto '>
+        
             <input
               type="file"
               onChange={handleCoverArtChange}
               accept="image/*"
               required
-              className="w-full text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 
-                        file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500"
+              className="w-full text-white file:mr-4 file:py-2 file:px-4 
+                      file:rounded-full file:border-0 file:text-sm file:font-semibold 
+                      file:bg-blue-600 file:text-white hover:file:bg-blue-500"
             />
             {coverArtFile && (
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-2 text-sm text-center text-gray-400">
                 Selected: {coverArtFile.name}
               </p>
             )}
@@ -598,9 +444,38 @@ return (
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-xl font-bold text-white">Album Metadata</h2>
+          <h2 className="text-xl font-bold text-center text-white">Album Metadata</h2>
           <AlbumMetadataForm onMetadataChange={setAlbumMetadata} />
         </section>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div>
+    <label className="block text-lg font-bold text-white mb-2">
+      Master Copyright (℗)*
+    </label>
+    <input
+      type="text"
+      value={master}
+      onChange={(e) => setMaster(e.target.value)}
+      className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-600"
+      placeholder="YYYY Owner Name"
+      required
+    />
+  </div>
+  <div>
+    <label className="block text-lg font-bold text-white mb-2">
+      Composition Copyright (©)*
+    </label>
+    <input
+      type="text"
+      value={composition}
+      onChange={(e) => setComposition(e.target.value)}
+      className="w-full px-4 py-2 rounded bg-gray-800 text-white border border-gray-600"
+      placeholder="YYYY Owner Name"
+      required
+    />
+  </div>
+</div>
 
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-white">Tracks</h2>
@@ -638,10 +513,11 @@ return (
               </div>
               
               <TrackForm
-                track={track}
-                onChange={(newTrack) => handleTrackUpdate(index, newTrack)}
-                onFileSelect={(file) => handleFileSelect({ type: 'song', index }, file)}
-              />
+  track={track} 
+  onChange={(newTrack) => handleTrackUpdate(index, newTrack)}
+  onFileSelect={(file) => handleFileSelect({ type: 'song', index }, file)}
+  trackNumber={index + 1}
+/>
             </div>
           ))}
 

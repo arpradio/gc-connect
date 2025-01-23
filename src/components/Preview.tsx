@@ -80,7 +80,7 @@ export default function Preview({ formData }: PreviewProps) {
               alt="Cover Art Preview"
               width={300}
               height={300}
-              className="px-2 pb-0 border-[1px] border-color-white shadow-md object-cover m-auto"
+              className="px-2 pb-0 border-[1px] border-neutral-500 shadow-md object-cover m-auto"
             />
           </div>
          
