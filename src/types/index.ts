@@ -1,9 +1,14 @@
-
 export interface Artist {
-  id: string; 
+  id: string;
   name: string;
   isni?: string;
   links: Record<string, string>;
+}
+
+export interface ContributingArtist extends Artist {
+  ipn?: string;
+  ipi?: string;
+  roles: string[];
 }
 
 export interface Author {
@@ -11,49 +16,13 @@ export interface Author {
   name: string;
   ipi?: string;
   share?: string;
-  role?: string
+  role?: string;
 }
 
 export interface PinataResponse {
   success: boolean;
   cid?: string;
   error?: string;
-}
-
-export interface TrackFormProps {
-  track: TrackFormData;
-  onChange: (track: TrackFormData) => void;
-  onFileSelect: (file: File) => void;
-  trackNumber: number;
-}
-
-export interface TrackFormData {
-  songTitle: string;
-  trackNumber: string;
-  songFile: File | null;
-  isAIGenerated: boolean;
-  isExplicit: boolean;
-  featuredArtists: Artist[];
-  authors: Author[];
-  producer?: string;
-  mixEngineer?: string;
-  masteringEngineer?: string;
-  isrc?: string;
-  iswc?: string;
-}
-export interface ContributingArtist extends Artist {
-  ipn?: string;
-  ipi?: string;
-  roles: string[]; // Make roles non-optional
-}
-export interface AlbumMetadata {
-  artists: Artist[];
-  contributingArtists: ContributingArtist[];
-  genres: string[];
-  copyright: {
-    master: string;
-    composition: string;
-  };
 }
 
 export interface PinataUploadResponse {
@@ -79,7 +48,7 @@ export interface CIP60FormData {
   quantity: number;
   producer: string;
   mastering_engineer: string;
-  mix_engineer:string;
+  mix_engineer: string;
   genre: string;
   subGenre1?: string;
   subGenre2?: string;
@@ -95,7 +64,7 @@ export type Network = 'preprod' | 'mainnet';
 
 export interface FormStateUpdate {
   field: keyof CIP60FormData;
-  value: any;
+  value: string | number | boolean | File | null | Artist[] | ContributingArtist[] | Author[];
 }
 
 export interface ValidationResult {
@@ -121,10 +90,34 @@ export interface PreviewProps {
   formData: CIP60FormData;
 }
 
+export interface AlbumMetadata {
+  artists: Artist[];
+  contributingArtists: ContributingArtist[];
+  genres: string[];
+  copyright: {
+    master: string;
+    composition: string;
+  };
+}
+
+export interface TrackFormData {
+  songTitle: string;
+  trackNumber: string;
+  songFile: File | null;
+  isExplicit: boolean;
+  isAIGenerated: boolean;
+  isrc?: string;
+  iswc?: string;
+  producer?: string;
+  mixEngineer?: string;
+  masteringEngineer?: string;
+  featuredArtists: Artist[];
+  authors: Author[];
+}
+
 export interface ArtistFormProps {
-  artist: Artist;
-  onUpdate: (artist: Artist) => void;
+  artist: Artist | ContributingArtist;
+  onUpdate: (artist: Artist | ContributingArtist) => void;
   onRemove?: () => void;
   showRemove?: boolean;
 }
-

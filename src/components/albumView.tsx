@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrackFormData, AlbumMetadata, CIP60FormData } from '@/types';
+import { TrackFormData, AlbumMetadata } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlayCircle, PauseCircle, Music2 } from 'lucide-react';
@@ -12,21 +12,19 @@ interface AlbumPreviewProps {
   albumMetadata: AlbumMetadata;
 }
 
-export default function AlbumPreview({ 
-  tracks, 
-  albumTitle, 
-  coverArtFile, 
-  albumMetadata 
+export default function AlbumPreview({
+  tracks,
+  albumTitle,
+  coverArtFile,
+  albumMetadata
 }: AlbumPreviewProps) {
   const [coverArtPreview, setCoverArtPreview] = useState<string>('/default.png');
   const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
   const [audioElements, setAudioElements] = useState<HTMLAudioElement[]>([]);
 
-  // Get the first valid artist name from the album metadata
   const mainArtist = albumMetadata.artists[0]?.name || 'Artist';
 
   useEffect(() => {
-    // Set cover art preview
     if (coverArtFile) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -39,7 +37,6 @@ export default function AlbumPreview({
   }, [coverArtFile]);
 
   useEffect(() => {
-    // Create audio elements for each track
     const newAudioElements = tracks.map(track => {
       if (track.songFile) {
         const audio = new Audio(URL.createObjectURL(track.songFile));
@@ -66,7 +63,6 @@ export default function AlbumPreview({
       audioElements[index]?.pause();
       setCurrentlyPlaying(null);
     } else {
-      // Stop currently playing audio if any
       if (currentlyPlaying !== null && audioElements[currentlyPlaying]) {
         audioElements[currentlyPlaying].pause();
       }
@@ -77,24 +73,23 @@ export default function AlbumPreview({
 
   const getAllContributors = () => {
     const contributors = new Map<string, Set<string>>();
-    
+
     tracks.forEach(track => {
-      // Producers
+
       if (track.producer) {
         if (!contributors.has('Producers')) {
           contributors.set('Producers', new Set());
         }
         contributors.get('Producers')?.add(track.producer);
       }
-      
-      // Engineers
+
       if (track.masteringEngineer) {
         if (!contributors.has('Mastering')) {
           contributors.set('Mastering', new Set());
         }
         contributors.get('Mastering')?.add(track.masteringEngineer);
       }
-      
+
       if (track.mixEngineer) {
         if (!contributors.has('Mixing')) {
           contributors.set('Mixing', new Set());
@@ -103,7 +98,6 @@ export default function AlbumPreview({
       }
     });
 
-    // Add contributing artists from album metadata
     albumMetadata.contributingArtists.forEach(artist => {
       artist.roles?.forEach(role => {
         if (!contributors.has(role)) {
@@ -121,7 +115,7 @@ export default function AlbumPreview({
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold">{albumTitle || 'Album Title'}</h2>
         <h3 className="text-xl text-gray-300">{mainArtist}</h3>
-        
+
         <div className="flex flex-wrap justify-center gap-2 mt-2">
           {albumMetadata.genres.map((genre, index) => (
             <span
@@ -182,7 +176,7 @@ export default function AlbumPreview({
 
             <div className="flex items-center gap-2 text-gray-400">
               {track.isrc && (
-                <Link 
+                <Link
                   href={`https://musicbrainz.org/isrc/${track.isrc}`}
                   target="_blank"
                   className="text-xs hover:text-blue-400"
@@ -191,7 +185,7 @@ export default function AlbumPreview({
                 </Link>
               )}
               {!track.isAIGenerated && track.iswc && (
-                <Link 
+                <Link
                   href={`https://www.ascap.com/repertory#/ace/search/iswc/${track.iswc}`}
                   target="_blank"
                   className="text-xs hover:text-blue-400"
@@ -220,7 +214,7 @@ export default function AlbumPreview({
 
       <div className="mt-6 text-center mx-auto text-sm text-gray-400 flex justify-between w-fit px-4 ">
         {!albumMetadata.copyright.composition.includes('AI Generated') && (
-          <p className="mx-2">© {albumMetadata.copyright.composition}</p> 
+          <p className="mx-2">© {albumMetadata.copyright.composition}</p>
         )}
         <p className="mx-2"> ℗ {albumMetadata.copyright.master}</p>
       </div>

@@ -1,7 +1,5 @@
-
-// app/layout.tsx
 import './globals.css';
-import Link from 'next/link';
+
 
 export const metadata = {
   title: 'CIP-60 Music Token Minting',

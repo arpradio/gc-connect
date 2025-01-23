@@ -7,8 +7,6 @@ import NetworkSelector, { useNetwork } from '@/components/NetworkSelector';
 import { PinataModal } from '@/components/modal';
 import CIP60Form from '@/components/CIP60Form';
 import MultiSongPreview from '@/components/multView';
-import { buildMetadata } from '@/lib/metadata';
-import { validateForm } from '@/lib/validation';
 import { CIP60FormData } from '@/types';
 import * as IpfsOnlyHash from 'ipfs-only-hash';
 import { PlusCircle, Trash2, ArrowDown, ArrowUp } from 'lucide-react';
@@ -44,15 +42,15 @@ export default function MultiSongMinter() {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [showPinataModal, setShowPinataModal] = useState(false);
-  const [selectedFileType, setSelectedFileType] = useState<{type: 'song' | 'cover', index: number} | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<{ type: 'song' | 'cover', index: number } | null>(null);
   const [uploadedCIDs, setUploadedCIDs] = useState<{
     [key: string]: { songCID?: string; coverCID?: string; }
   }>({});
   const [releaseTitle, setReleaseTitle] = useState('');
-  const [songs, setSongs] = useState<CIP60FormData[]>([{...initialFormState}]);
+  const [songs, setSongs] = useState<CIP60FormData[]>([{ ...initialFormState }]);
   const [coverArtFile, setCoverArtFile] = useState<File | null>(null);
 
-  const handleAddSong = () => setSongs(prev => [...prev, {...initialFormState}]);
+  const handleAddSong = () => setSongs(prev => [...prev, { ...initialFormState }]);
 
   const handleRemoveSong = (index: number) => {
     setSongs(prev => prev.filter((_, i) => i !== index));
@@ -73,7 +71,7 @@ export default function MultiSongMinter() {
   const handleSongUpdate = (index: number, updatedForm: CIP60FormData | ((prev: CIP60FormData) => CIP60FormData)) => {
     setSongs(prev => {
       const newSongs = [...prev];
-      newSongs[index] = typeof updatedForm === 'function' 
+      newSongs[index] = typeof updatedForm === 'function'
         ? updatedForm(newSongs[index])
         : updatedForm;
       return newSongs;
@@ -88,7 +86,7 @@ export default function MultiSongMinter() {
     }
   };
 
-  const handleFileSelect = (fileInfo: {type: 'song' | 'cover', index: number}, file: File) => {
+  const handleFileSelect = (fileInfo: { type: 'song' | 'cover', index: number }, file: File) => {
     setSongs(prev => {
       const newSongs = [...prev];
       if (fileInfo.type === 'song') {
@@ -99,7 +97,7 @@ export default function MultiSongMinter() {
       }
       return newSongs;
     });
-    
+
     setSelectedFileType(fileInfo);
     setShowPinataModal(true);
   };
@@ -124,34 +122,34 @@ export default function MultiSongMinter() {
     setError('');
 
     try {
-      let sharedCoverCID = uploadedCIDs[0]?.coverCID;  
-      
+      let sharedCoverCID = uploadedCIDs[0]?.coverCID;
+
       if (!sharedCoverCID && coverArtFile) {
         const coverBuffer = await coverArtFile.arrayBuffer();
         sharedCoverCID = await IpfsOnlyHash.of(Buffer.from(coverBuffer));
       }
-    
+
       if (!sharedCoverCID) {
         throw new Error('Missing cover art CID');
       }
-    
+
       const processedSongs = await Promise.all(songs.map(async (song, index) => {
         let songCID = uploadedCIDs[index]?.songCID;
-    
+
         if (!songCID && song.songFile) {
           const songBuffer = await song.songFile.arrayBuffer();
           songCID = await IpfsOnlyHash.of(Buffer.from(songBuffer));
         }
-    
+
         if (!songCID) {
           throw new Error(`Missing IPFS CID for track ${index + 1}`);
         }
-    
+
         const audio = new Audio();
         const songUrl = URL.createObjectURL(song.songFile!);
         audio.src = songUrl;
-    
-        const duration = await new Promise<{minutes: number, seconds: number}>((resolve, reject) => {
+
+        const duration = await new Promise<{ minutes: number, seconds: number }>((resolve, reject) => {
           audio.addEventListener('loadedmetadata', () => {
             URL.revokeObjectURL(songUrl);
             const totalSeconds = Math.floor(audio.duration);
@@ -162,7 +160,7 @@ export default function MultiSongMinter() {
           });
           audio.addEventListener('error', reject);
         });
-    
+
         return {
           ...song,
           songCID,
@@ -274,14 +272,14 @@ export default function MultiSongMinter() {
                           ...(song.isExplicit && { explicit: true }),
                           copyright: {
                             master: `℗ ${song.recordingOwner}`,
-                            composition: song.isAIGenerated 
-                              ? "© N/A - AI Generated" 
+                            composition: song.isAIGenerated
+                              ? "© N/A - AI Generated"
                               : `© ${song.compositionOwner}`
                           },
                           genres: [song.genre, song.subGenre1, song.subGenre2].filter(Boolean),
                           ...(song.producer && { producer: song.producer }),
-                          ...(song.mastering_engineer && { 
-                            mastering_engineer: song.mastering_engineer 
+                          ...(song.mastering_engineer && {
+                            mastering_engineer: song.mastering_engineer
                           }),
                           ...(song.mix_engineer && { mix_engineer: song.mix_engineer }),
                           ...(song.isrc && { isrc: song.isrc }),
@@ -314,9 +312,9 @@ export default function MultiSongMinter() {
         network,
         encoding: 'gzip',
       });
-      
+
       window.open(gcUrl, '_blank', 'width=400,height=600');
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
       console.error('Minting error:', err);
@@ -343,24 +341,24 @@ export default function MultiSongMinter() {
             BACK
           </div>
         </Link>
-        
+
         <div className="text-center mb-6">
           <a href="https://psyencelab.media" target="_blank" rel="noopener noreferrer">
             <Image src="/psyencelab.png" alt="PsyenceLab" width={400} height={100} className="mx-auto border-[1px] rounded-md" priority />
           </a>
-    <h1 className="text-2xl mt-2 font-mono text-white">Be Your Own Minter!</h1>
-             <h2 className="text-xl font-bold text-[#228fa7] mt-4 text-shadow">
-               Multiple Song Token Minting
-             </h2>
-             <p className="text-white/80 italic text-xs">
-               A CIP60-compliant music token minting script for works of multiple songs.
-             </p>
-             
-             <NetworkSelector
-               selectedNetwork={network}
-               onNetworkChange={setNetwork}
-             />
-             <hr className='mb-6'/>
+          <h1 className="text-2xl mt-2 font-mono text-white">Be Your Own Minter!</h1>
+          <h2 className="text-xl font-bold text-[#228fa7] mt-4 text-shadow">
+            Multiple Song Token Minting
+          </h2>
+          <p className="text-white/80 italic text-xs">
+            A CIP60-compliant music token minting script for works of multiple songs.
+          </p>
+
+          <NetworkSelector
+            selectedNetwork={network}
+            onNetworkChange={setNetwork}
+          />
+          <hr className='mb-6' />
         </div>
 
         <div className="mb-6">
@@ -377,10 +375,10 @@ export default function MultiSongMinter() {
           />
         </div>
         <label htmlFor="coverArtFile" className="block text-lg font-bold text-white">
-            Cover Art* {coverArtFile?.name && `(${coverArtFile.name})`}
-          </label>
+          Cover Art* {coverArtFile?.name && `(${coverArtFile.name})`}
+        </label>
         <div className="mb-6 rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto ">
-         
+
           <input
             type="file"
             id="coverArtFile"
@@ -416,11 +414,11 @@ export default function MultiSongMinter() {
                 )}
               </div>
             </div>
-            
+
             <CIP60Form
               formState={song}
               onFormChange={(newForm) => handleSongUpdate(index, newForm)}
-              onFileSelect={(type, file) => handleFileSelect({type, index}, file)}
+              onFileSelect={(type, file) => handleFileSelect({ type, index }, file)}
             />
           </div>
         ))}
@@ -468,12 +466,13 @@ export default function MultiSongMinter() {
               setShowPinataModal(false);
               setSelectedFileType(null);
             }}
-            file={selectedFileType.type === 'song' 
-              ? songs[selectedFileType.index].songFile 
+            file={selectedFileType.type === 'song'
+              ? songs[selectedFileType.index].songFile
               : coverArtFile}
             onUploadSuccess={handlePinataUploadSuccess}
           />
         )}
       </div>
     </main>
-  )}
+  )
+}

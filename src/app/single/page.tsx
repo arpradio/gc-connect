@@ -10,11 +10,7 @@ import { validateForm } from '@/lib/validation';
 import { CIP60FormData } from '@/types';
 import Link from 'next/link';
 import * as IpfsOnlyHash from 'ipfs-only-hash';
-
-
-// Import new consolidated components
 import CIP60Form from "@/components/CIP60Form"
-import { Alert } from '@/components/ui/alert';
 
 const GAMECHANGER_SDK_URL = "https://cdn.jsdelivr.net/npm/@gamechanger-finance/gc@0.1/dist/browser.min.js";
 
@@ -92,19 +88,17 @@ export default function Page() {
         ...prev,
         coverArtFile: file
       }));
-      
+
       handleFileSelect('cover', file);
     }
   };
-
-  
 
   const handleFileSelect = (fileType: 'song' | 'cover', file: File) => {
     setFormState(prev => ({
       ...prev,
       [fileType === 'song' ? 'songFile' : 'coverArtFile']: file
     }));
-    
+
     setSelectedFileType(fileType);
     setShowPinataModal(true);
   };
@@ -126,62 +120,62 @@ export default function Page() {
     setError('');
 
     try {
-        const validation = validateForm(formState);
-        if (!validation.valid) {
-            throw new Error(validation.errors.join(', '));
+      const validation = validateForm(formState);
+      if (!validation.valid) {
+        throw new Error(validation.errors.join(', '));
+      }
+
+      let songCID = uploadedCIDs.songCID;
+      let coverCID = uploadedCIDs.coverCID;
+
+      if (!songCID || !coverCID) {
+        alert('Warning: Files have not been pinned to IPFS. They may become inaccessible in the future.');
+
+        try {
+          if (!songCID && formState.songFile) {
+            const songBuffer = await formState.songFile.arrayBuffer();
+            songCID = await IpfsOnlyHash.of(Buffer.from(songBuffer));
+            console.log('Generated song CID:', songCID);
+          }
+
+          if (!coverCID && formState.coverArtFile) {
+            const coverBuffer = await formState.coverArtFile.arrayBuffer();
+            coverCID = await IpfsOnlyHash.of(Buffer.from(coverBuffer));
+            console.log('Generated cover CID:', coverCID);
+          }
+        } catch (err) {
+          throw new Error('Failed to calculate file CIDs: ' + (err instanceof Error ? err.message : String(err)));
         }
+      }
 
-        let songCID = uploadedCIDs.songCID;
-        let coverCID = uploadedCIDs.coverCID;
+      if (!songCID || !coverCID) {
+        throw new Error('Failed to obtain CIDs for files');
+      }
 
-        if (!songCID || !coverCID) {
-            alert('Warning: Files have not been pinned to IPFS. They may become inaccessible in the future.');
-            
-            try {
-                if (!songCID && formState.songFile) {
-                    const songBuffer = await formState.songFile.arrayBuffer();
-                    songCID = await IpfsOnlyHash.of(Buffer.from(songBuffer));
-                    console.log('Generated song CID:', songCID);
-                }
-                
-                if (!coverCID && formState.coverArtFile) {
-                    const coverBuffer = await formState.coverArtFile.arrayBuffer();
-                    coverCID = await IpfsOnlyHash.of(Buffer.from(coverBuffer));
-                    console.log('Generated cover CID:', coverCID);
-                }
-            } catch (err) {
-                throw new Error('Failed to calculate file CIDs: ' + (err instanceof Error ? err.message : String(err)));
-            }
-        }
+      const audio = new Audio();
+      const songUrl = URL.createObjectURL(formState.songFile!);
+      audio.src = songUrl;
 
-        if (!songCID || !coverCID) {
-            throw new Error('Failed to obtain CIDs for files');
-        }
-
-        const audio = new Audio();
-        const songUrl = URL.createObjectURL(formState.songFile!);
-        audio.src = songUrl;
-
-        await new Promise<void>((resolve, reject) => {
-            audio.addEventListener('loadedmetadata', () => {
-                URL.revokeObjectURL(songUrl);
-                resolve();
-            });
-            audio.addEventListener('error', reject);
+      await new Promise<void>((resolve, reject) => {
+        audio.addEventListener('loadedmetadata', () => {
+          URL.revokeObjectURL(songUrl);
+          resolve();
         });
+        audio.addEventListener('error', reject);
+      });
 
-        const totalSeconds = Math.floor(audio.duration);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
+      const totalSeconds = Math.floor(audio.duration);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
 
-        const metadata = buildMetadata({
-            formData: formState,
-            songIPFS: songCID,
-            coverIPFS: coverCID,
-            audioFormat: formState.songFile!.type,
-            minutes,
-            seconds
-        } as BuildMetadataParams);
+      const metadata = buildMetadata({
+        formData: formState,
+        songIPFS: songCID,
+        coverIPFS: coverCID,
+        audioFormat: formState.songFile!.type,
+        minutes,
+        seconds
+      } as BuildMetadataParams);
 
 
       const gcscript = {
@@ -296,7 +290,7 @@ export default function Page() {
                 type: "macro",
                 run: "{get('cache.dependencies.mintingPolicy.scriptHex')}"
               }
-           
+
             }
           }
         }
@@ -308,9 +302,9 @@ export default function Page() {
         network,
         encoding: 'gzip',
       });
-      
+
       window.open(gcUrl, '_blank', 'width=400,height=600');
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
       console.error('Minting error:', err);
@@ -319,14 +313,12 @@ export default function Page() {
     }
   };
 
-  
-
   useEffect(() => {
     const script = document.createElement('script');
     script.src = GAMECHANGER_SDK_URL;
     script.async = true;
     document.body.appendChild(script);
-  
+
     return () => {
       document.body.removeChild(script);
     };
@@ -340,7 +332,7 @@ export default function Page() {
             BACK
           </div>
         </Link>
-        
+
         <div className="text-center mb-3">
           <a href="https://psyencelab.media" target="_blank" rel="noopener noreferrer">
             <Image
@@ -359,120 +351,120 @@ export default function Page() {
           <p className="text-white/80 italic text-xs">
             A CIP60-compliant music token minting script for single works.
           </p>
-          
+
           <NetworkSelector
             selectedNetwork={network}
             onNetworkChange={setNetwork}
           />
-          <hr className='mb-6'/>
+          <hr className='mb-6' />
           <label htmlFor="coverArtFile" className="block text-lg font-bold text-white">
             Cover Art* {formState.coverArtFile?.name && '(Selected)'}
           </label>
-        <div className='my-4 rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto '>
-       
-          <input
-            type="file"
-            id="coverArtFile"
-            name="coverArtFile"
-            onChange={handleCoverArtChange}
-            accept="image/*"
-            required
-            className="w-full text-white file:mr-4 file:py-2 file:px-4 
+          <div className='my-4 rounded bg-black/50  border-[1px] border-neutral-500 w-fit px-6 py-3 mx-auto '>
+
+            <input
+              type="file"
+              id="coverArtFile"
+              name="coverArtFile"
+              onChange={handleCoverArtChange}
+              accept="image/*"
+              required
+              className="w-full text-white file:mr-4 file:py-2 file:px-4 
                       file:rounded-full file:border-0 file:text-sm file:font-semibold 
                       file:bg-blue-600 file:text-white hover:file:bg-blue-500"
-          />
-        </div>
-
-        <div className="m-2">
-          <label htmlFor="releaseTitle" className="block text-lg font-bold text-white">
-            Release Title*
-          </label>
-          <input
-            type="text"
-            id="releaseTitle"
-            name="releaseTitle"
-            value={formState.releaseTitle}
-            onChange={handleInputChange}
-            required
-            className="mt-1 block  md:w-full lg:w-[20rem] rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 mx-auto"
-          />
-        </div>
-<CIP60Form    formState={formState}
-          onFormChange={setFormState}
-          onFileSelect={handleFileSelect}
-        />
-         <div className="m-2">
-        <label htmlFor="quantity" className="block text-sm font-medium text-white">
-          Token Quantity*
-        </label>
-        <input
-          type="number"
-          id="quantity"
-          name="quantity"
-          value={formState.quantity}
-          onChange={handleInputChange}
-          min="1"
-          required
-          className="mt-1 block w-24 rounded-md mx-auto border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-        />
-      </div>
-        <Preview formData={formState} />
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded text-red-500">
-            {error}
+            />
           </div>
-        )}
 
-        <button
-          onClick={handleMint}
-          disabled={loading}
-          id="record"
-          className={`
+          <div className="m-2">
+            <label htmlFor="releaseTitle" className="block text-lg font-bold text-white">
+              Release Title*
+            </label>
+            <input
+              type="text"
+              id="releaseTitle"
+              name="releaseTitle"
+              value={formState.releaseTitle}
+              onChange={handleInputChange}
+              required
+              className="mt-1 block  md:w-full lg:w-[20rem] rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 mx-auto"
+            />
+          </div>
+          <CIP60Form formState={formState}
+            onFormChange={setFormState}
+            onFileSelect={handleFileSelect}
+          />
+          <div className="m-2">
+            <label htmlFor="quantity" className="block text-sm font-medium text-white">
+              Token Quantity*
+            </label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              value={formState.quantity}
+              onChange={handleInputChange}
+              min="1"
+              required
+              className="mt-1 block w-24 rounded-md mx-auto border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          <Preview formData={formState} />
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded text-red-500">
+              {error}
+            </div>
+          )}
+
+          <button
+            onClick={handleMint}
+            disabled={loading}
+            id="record"
+            className={`
             mt-6 w-fit mx-auto py-4 px-8 rounded-lg font-bold text-xl
             flex items-center justify-center gap-2 border-[1px]
             ${loading ? 'bg-black cursor-not-allowed' : 'bg-black'}
             transition-colors duration-200
           `}
-        >
-          {loading ? (
-            <>
-              <Image
-                src="/album.gif"
-                alt="Loading..."
-                width={80}
-                height={80}
-                priority
-              />
-              <span>Preparing Transaction...</span>
-            </>
-          ) : (
-            <span className="text-white">Press Record</span>
+          >
+            {loading ? (
+              <>
+                <Image
+                  src="/album.gif"
+                  alt="Loading..."
+                  width={80}
+                  height={80}
+                  priority
+                />
+                <span>Preparing Transaction...</span>
+              </>
+            ) : (
+              <span className="text-white">Press Record</span>
+            )}
+          </button>
+
+          {showPinataModal && selectedFileType && (
+            <PinataModal
+              isOpen={showPinataModal}
+              onClose={() => {
+                setShowPinataModal(false);
+                setSelectedFileType(null);
+              }}
+              file={selectedFileType === 'song' ? formState.songFile : formState.coverArtFile}
+              onUploadSuccess={handlePinataUploadSuccess}
+            />
           )}
-        </button>
 
-        {showPinataModal && selectedFileType && (
-          <PinataModal
-            isOpen={showPinataModal}
-            onClose={() => {
-              setShowPinataModal(false);
-              setSelectedFileType(null);
-            }}
-            file={selectedFileType === 'song' ? formState.songFile : formState.coverArtFile}
-            onUploadSuccess={handlePinataUploadSuccess}
-          />
-        )}
-
-        <div className="mt-8 text-white/80">
-          <h3 className="text-lg font-medium mb-2">Instructions:</h3>
-          <ol className="list-decimal list-inside text-sm space-y-1">
-            <li>Fill in all required fields</li>
-            <li>Upload your audio file (WAV/MPEG/MP3)</li>
-            <li>Upload cover art (JPEG/PNG, square format recommended)</li>
-            <li>Connect your wallet to mint the token</li>
-          </ol>
+          <div className="mt-8 text-white/80">
+            <h3 className="text-lg font-medium mb-2">Instructions:</h3>
+            <ol className="list-decimal list-inside text-sm space-y-1">
+              <li>Fill in all required fields</li>
+              <li>Upload your audio file (WAV/MPEG/MP3)</li>
+              <li>Upload cover art (JPEG/PNG, square format recommended)</li>
+              <li>Connect your wallet to mint the token</li>
+            </ol>
+          </div>
         </div>
-      </div>
       </div>
     </main>
   );

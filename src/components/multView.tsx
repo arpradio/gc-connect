@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CIP60FormData } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Music2, PlayCircle, PauseCircle } from 'lucide-react';
+import { PlayCircle, PauseCircle } from 'lucide-react';
 
 interface MultiSongPreviewProps {
   songs: CIP60FormData[];

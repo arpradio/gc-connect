@@ -52,7 +52,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
   };
 
   const handleRemoveArtist = (index: number) => {
-    if (index === 0) return; 
+    if (index === 0) return;
     setMetadata(prev => ({
       ...prev,
       artists: prev.artists.filter((_, i) => i !== index)
@@ -126,7 +126,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             showRemove={index > 0}
           />
         ))}
-        
+
         <button
           type="button"
           onClick={handleAddArtist}
@@ -146,25 +146,25 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             className="bg-gray-700 text-white rounded p-2"
           >
             <option value="">Primary Genre</option>
-            
-          <option value="Alternative">Alternative</option>
-          <option value="Avant-Garde/Experimental">Avant-Garde/Experimental</option>
-          <option value="Blues">Blues</option>
-          <option value="Classical">Classical</option>
-          <option value="Country">Country</option>
-          <option value="Easy Listening">Easy Listening</option>
-          <option value="Electronic">Electronic</option>
-          <option value="Folk">Folk</option>
-          <option value="Hip-Hop/Rap">Hip-Hop/Rap</option>
-          <option value="Jazz">Jazz</option>
-          <option value="Latin">Latin</option>
-          <option value="Metal">Metal</option>
-          <option value="Punk">Punk</option>
-          <option value="RnB">RnB</option>
-          <option value="Rock">Rock</option>
-          <option value="World">World</option>
+
+            <option value="Alternative">Alternative</option>
+            <option value="Avant-Garde/Experimental">Avant-Garde/Experimental</option>
+            <option value="Blues">Blues</option>
+            <option value="Classical">Classical</option>
+            <option value="Country">Country</option>
+            <option value="Easy Listening">Easy Listening</option>
+            <option value="Electronic">Electronic</option>
+            <option value="Folk">Folk</option>
+            <option value="Hip-Hop/Rap">Hip-Hop/Rap</option>
+            <option value="Jazz">Jazz</option>
+            <option value="Latin">Latin</option>
+            <option value="Metal">Metal</option>
+            <option value="Punk">Punk</option>
+            <option value="RnB">RnB</option>
+            <option value="Rock">Rock</option>
+            <option value="World">World</option>
           </select>
-          
+
           <input
             type="text"
             placeholder="Sub Genre 1"
@@ -172,7 +172,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             onChange={(e) => handleGenreChange(e.target.value, 1)}
             className="bg-gray-700 text-white rounded p-2"
           />
-          
+
           <input
             type="text"
             placeholder="Sub Genre 2"
@@ -250,7 +250,7 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             </div>
           </div>
         ))}
-        
+
         <button
           type="button"
           onClick={handleAddContributingArtist}

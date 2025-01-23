@@ -43,10 +43,10 @@ export default function Preview({ formData }: PreviewProps) {
     <div className="text-white">
       <h2 className="text-2xl mt-4 mb-0 font-bold text-center text-white">Preview</h2>
       <div className="w-full max-w-2xl mx-auto bg-black/60 rounded-[10px] p-6 shadow-xl space-y-6 border-[1px] border-color-silver/10">
-        
+
         <div className="text-center space-y-2">
           <h3 className="text-xl text-white">
-            {mainArtist?.name && formData.releaseTitle 
+            {mainArtist?.name && formData.releaseTitle
               ? `${formData.releaseTitle}`
               : 'Artist - Release Title'
             }
@@ -83,7 +83,7 @@ export default function Preview({ formData }: PreviewProps) {
               className="px-2 pb-0 border-[1px] border-neutral-500 shadow-md object-cover m-auto"
             />
           </div>
-         
+
         </div>
 
         <div className="">
@@ -165,19 +165,19 @@ export default function Preview({ formData }: PreviewProps) {
             <div className="">
               {formData.contributingArtists.map((artist, index) => (
                 <div key={index}>
-                 <div className="  mx-auto text-md font-bold "> <span>{artist.name}</span><span className="text-xs">{artist.roles.length > 0 && ` (${artist.roles.join(', ')})`}</span></div>
-                  
-                 <div >{Object.entries(artist.links || {}).map(([name, url]) => (
-                      <a
-                        key={name}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs bg-gray-800 p-1 rounded hover:bg-gray-700 transition-colors"
-                      >
-                        {name}
-                      </a>
-                    ))}</div>
+                  <div className="  mx-auto text-md font-bold "> <span>{artist.name}</span><span className="text-xs">{artist.roles.length > 0 && ` (${artist.roles.join(', ')})`}</span></div>
+
+                  <div >{Object.entries(artist.links || {}).map(([name, url]) => (
+                    <a
+                      key={name}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs bg-gray-800 p-1 rounded hover:bg-gray-700 transition-colors"
+                    >
+                      {name}
+                    </a>
+                  ))}</div>
                 </div>
               ))}
             </div>
@@ -185,7 +185,7 @@ export default function Preview({ formData }: PreviewProps) {
         )}
 
         <div className="w-fit text-center text-[.8rem] mx-auto italic text-netural-400">
-          {formData.producer && <Link href={`https://musicbrainz.org/search?query=${formData.producer}&type=artist&method=indexed`}  target='_blank'><div className="">Producer: {formData.producer}</div></Link>}
+          {formData.producer && <Link href={`https://musicbrainz.org/search?query=${formData.producer}&type=artist&method=indexed`} target='_blank'><div className="">Producer: {formData.producer}</div></Link>}
           {formData.mastering_engineer && <Link href={`https://musicbrainz.org/search?query=${formData.mastering_engineer}&type=artist&method=indexed`} className="text-purple" target='_blank'><div>Mastering Engineer: {formData.mastering_engineer}</div></Link>}
           {formData.mix_engineer && <Link href={`https://musicbrainz.org/search?query=${formData.mix_engineer}&type=artist&method=indexed`} target='_blank' className="text-purple"><div>Mix Engineer: {formData.mix_engineer}</div></Link>}
         </div>
@@ -205,21 +205,21 @@ export default function Preview({ formData }: PreviewProps) {
           </div>
         )}
 
-        
+
 
         <div className="flex justify-center gap-2 text-xs m-0 text-gray-500">
           {!formData.isAIGenerated && formData.iswc && <Link href={`https://www.ascap.com/repertory#/ace/search/iswc/${formData.iswc}`} className="text-blue-400" target='_blank'><div>ISWC: {formData.iswc}</div></Link>}
-          {formData.isrc &&  <Link className="text-amber-200" href={`https://musicbrainz.org/isrc/${formData.isrc}`} target='_blank'><div>ISRC:{formData.isrc}</div></Link>}
+          {formData.isrc && <Link className="text-amber-200" href={`https://musicbrainz.org/isrc/${formData.isrc}`} target='_blank'><div>ISRC:{formData.isrc}</div></Link>}
         </div>
 
         {audioUrl && (
-            <div className="w-full max-w-md mx-auto">
-              <audio controls className="w-full">
-                <source src={audioUrl} type={formData.songFile?.type} />
-                Your browser does not support the audio element.
-              </audio>
-            </div>
-          )}
+          <div className="w-full max-w-md mx-auto">
+            <audio controls className="w-full">
+              <source src={audioUrl} type={formData.songFile?.type} />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
 
         <div className="text-center text-sm text-gray-400">
           {!formData.isAIGenerated ? (

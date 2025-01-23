@@ -10,19 +10,9 @@ interface TrackFormProps {
   trackNumber: number;
 }
 
-const initialTrackState: TrackFormData = {
-  songTitle: '',
-  trackNumber: '1',
-  songFile: null,
-  isExplicit: false,
-  isAIGenerated: false,
-  featuredArtists: [],
-  authors: [],
-  mixEngineer: '',
-  masteringEngineer: '',
-};
 
-export default function TrackForm({ track, onChange, onFileSelect, trackNumber }: TrackFormProps) {
+
+export default function TrackForm({ track, onChange, onFileSelect }: TrackFormProps) {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     onChange({
@@ -155,7 +145,7 @@ export default function TrackForm({ track, onChange, onFileSelect, trackNumber }
           <input
             type="text"
             name="mastering_engineer"
-            value={track.mastering_engineer}
+            value={track.masteringEngineer}
             onChange={handleInputChange}
             className="w-full px-3 py-2 rounded bg-gray-700 text-white"
           />
@@ -168,7 +158,7 @@ export default function TrackForm({ track, onChange, onFileSelect, trackNumber }
           <input
             type="text"
             name="mix_engineer"
-            value={track.mix_engineer}
+            value={track.mixEngineer}
             onChange={handleInputChange}
             className="w-full px-3 py-2 rounded bg-gray-700 text-white"
           />
