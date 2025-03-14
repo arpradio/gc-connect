@@ -6,7 +6,7 @@ First, clone the repo
 
 ```
 git clone https://github.com/arpradio/arpradio.git
-cd cip60Minter
+cd arpradio
 ```
 
 install dependancies
