@@ -25,7 +25,7 @@ export function buildMetadata({
         "{get('cache.dependencies.assetName')}": {
           "name": `${mainArtist.name} - ${formData.releaseTitle}`,
           "image": `ipfs://${coverIPFS}`,
-          "music_metadata_version":"3",
+          "music_metadata_version": 3,
           "release": {
             "release_type": "Single",
             "release_title": formData.releaseTitle,
@@ -36,13 +36,13 @@ export function buildMetadata({
               "mediaType": audioFormat,
               "src": `ipfs://${songIPFS}`,
               "song": {
-     
+
                 "artists": formData.artists.map(artist => ({
                   name: artist.name,
                   ...(artist.isni && { isni: artist.isni }),
                   ...(Object.keys(artist.links).length > 0 && { links: artist.links })
                 })),
-                
+
                 ...(formData.featuredArtists.length > 0 && {
                   "featured_artists": formData.featuredArtists.map(artist => ({
                     name: artist.name,
@@ -90,7 +90,7 @@ export function buildMetadata({
                 "genres": [
                   `${formData.genre}`,
                   `${formData.subGenre1}`,
-                 `${formData.subGenre2}`
+                  `${formData.subGenre2}`
                 ].filter(Boolean),
 
                 "song_duration": `PT${minutes}M${seconds}S`,
@@ -100,7 +100,7 @@ export function buildMetadata({
                 ...(formData.mastering_engineer && { "mastering_engineer": formData.mastering_engineer }),
                 ...(formData.mix_engineer && { "mix_engineer": formData.mix_engineer }),
                 ...(formData.isrc && { "isrc": formData.isrc }),
-                ...(formData.iswc && !formData.isAIGenerated && { 
+                ...(formData.iswc && !formData.isAIGenerated && {
                   "iswc": formData.iswc
                 })
               }

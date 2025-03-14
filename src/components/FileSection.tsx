@@ -1,4 +1,3 @@
-// FileSection.tsx
 import { ChangeEvent } from 'react';
 
 interface FileSectionProps {
@@ -40,7 +39,6 @@ export const FileSection = ({ songFile, coverArtFile, onFileChange }: FileSectio
   </div>
 );
 
-// GenreSection.tsx
 interface GenreSectionProps {
   genre: string;
   subGenre1: string;
@@ -112,7 +110,6 @@ export const GenreSection = ({ genre, subGenre1, subGenre2, onChange }: GenreSec
   </div>
 );
 
-// RightsSection.tsx
 interface RightsSectionProps {
   isrc: string;
   iswc: string;
@@ -196,7 +193,6 @@ export const RightsSection = ({
   </div>
 );
 
-// ReleaseDetailsSection.tsx
 interface ReleaseDetailsSectionProps {
   releaseTitle: string;
   songTitle: string;

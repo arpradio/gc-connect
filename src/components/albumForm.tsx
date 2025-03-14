@@ -6,7 +6,6 @@ import { PlusCircle } from 'lucide-react';
 interface AlbumMetadataFormProps {
   onMetadataChange: (metadata: AlbumMetadata) => void;
 }
-
 interface AlbumMetadata {
   artists: Artist[];
   contributingArtists: ContributingArtist[];
@@ -18,6 +17,12 @@ interface AlbumMetadata {
 }
 
 export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFormProps) {
+
+  interface AlbumMetadataFormProps {
+    onMetadataChange: (metadata: AlbumMetadata) => void;
+    initialMetadata?: AlbumMetadata;
+  }
+
   const [metadata, setMetadata] = useState<AlbumMetadata>({
     artists: [{ id: 'main', name: '', isni: '', links: {} }],
     contributingArtists: [],
@@ -28,6 +33,18 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
     }
   });
 
+  const [formData, setFormData] = useState<AlbumMetadata>({
+    artists: [{ id: 'main', name: '', isni: '', links: {} }],
+    contributingArtists: [],
+    genres: ['', '', ''],
+    copyright: {
+      master: '',
+      composition: ''
+    }
+  });
+
+
+  
   const handleAddArtist = () => {
     setMetadata(prev => ({
       ...prev,
@@ -101,17 +118,18 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
     onMetadataChange(metadata);
   };
 
-  const handleGenreChange = (value: string, index: number) => {
-    setMetadata(prev => {
-      const newGenres = [...prev.genres];
-      newGenres[index] = value;
-      return {
-        ...prev,
-        genres: newGenres
-      };
-    });
-    onMetadataChange(metadata);
+
+  const handleGenreChange = (index: number, value: string) => {
+    const newGenres = [...formData.genres];
+    newGenres[index] = value;
+    const updatedFormData = {
+      ...formData,
+      genres: newGenres
+    };
+    setFormData(updatedFormData);
+    onMetadataChange(updatedFormData);
   };
+
 
   return (
     <div className="space-y-6">
@@ -138,15 +156,18 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-center font-mono text-white">Album Genres</h3>
-        <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-white mb-1">
+            Primary Genre*
+          </label>
           <select
-            value={metadata.genres[0] || ''}
-            onChange={(e) => handleGenreChange(e.target.value, 0)}
-            className="bg-gray-700 text-white rounded p-2"
+            value={formData.genres[0]}
+            onChange={(e) => handleGenreChange(0, e.target.value)}
+            required
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
           >
-            <option value="">Primary Genre</option>
-
+            <option value="">Select a genre</option>
             <option value="Alternative">Alternative</option>
             <option value="Avant-Garde/Experimental">Avant-Garde/Experimental</option>
             <option value="Blues">Blues</option>
@@ -164,24 +185,31 @@ export default function AlbumMetadataForm({ onMetadataChange }: AlbumMetadataFor
             <option value="Rock">Rock</option>
             <option value="World">World</option>
           </select>
-
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-white mb-1">
+            Sub Genre 1
+          </label>
           <input
             type="text"
-            placeholder="Sub Genre 1"
-            value={metadata.genres[1] || ''}
-            onChange={(e) => handleGenreChange(e.target.value, 1)}
-            className="bg-gray-700 text-white rounded p-2"
+            value={formData.genres[1]}
+            onChange={(e) => handleGenreChange(1, e.target.value)}
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
           />
-
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-white mb-1">
+            Sub Genre 2
+          </label>
           <input
             type="text"
-            placeholder="Sub Genre 2"
-            value={metadata.genres[2] || ''}
-            onChange={(e) => handleGenreChange(e.target.value, 2)}
-            className="bg-gray-700 text-white rounded p-2"
+            value={formData.genres[2]}
+            onChange={(e) => handleGenreChange(2, e.target.value)}
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
           />
         </div>
       </div>
+    </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-white">Contributing Artists</h3>

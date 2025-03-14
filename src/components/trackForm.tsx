@@ -2,6 +2,7 @@ import { ChangeEvent } from 'react';
 import { TrackFormData, Artist } from '@/types';
 import ArtistForm from './artistForm';
 import { PlusCircle, X } from 'lucide-react';
+import { AuthorsForm } from './albumAuthors';
 
 interface TrackFormProps {
   track: TrackFormData;
@@ -10,14 +11,13 @@ interface TrackFormProps {
   trackNumber: number;
 }
 
-
-
-export default function TrackForm({ track, onChange, onFileSelect }: TrackFormProps) {
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+export default function TrackForm({ track, onChange, onFileSelect, trackNumber }: TrackFormProps) {
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     onChange({
       ...track,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
@@ -29,13 +29,17 @@ export default function TrackForm({ track, onChange, onFileSelect }: TrackFormPr
     });
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       onFileSelect(file);
+      onChange({
+        ...track,
+        songFile: file
+      });
     }
   };
-
+  
   const handleAddFeaturedArtist = () => {
     onChange({
       ...track,
@@ -144,12 +148,13 @@ export default function TrackForm({ track, onChange, onFileSelect }: TrackFormPr
           </label>
           <input
             type="text"
-            name="mastering_engineer"
+            name="masteringEngineer"
             value={track.masteringEngineer}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
           />
         </div>
+     
 
         <div>
           <label className="block text-sm font-medium text-white mb-1">
@@ -157,13 +162,14 @@ export default function TrackForm({ track, onChange, onFileSelect }: TrackFormPr
           </label>
           <input
             type="text"
-            name="mix_engineer"
+            name="mixEngineer"
             value={track.mixEngineer}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 rounded bg-gray-700 text-white"
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white border border-gray-600"
           />
         </div>
-      </div>
+        </div>
+
 
       <div className="flex flex-wrap gap-4">
         <label className="flex items-center space-x-2">
@@ -190,17 +196,24 @@ export default function TrackForm({ track, onChange, onFileSelect }: TrackFormPr
       </div>
 
       <div className="space-y-4">
+      <h4 className="text-lg sm:font-medium text-center font-bold font-mono text-white">Featured Artists</h4>
         <div className="flex justify-between items-center">
-          <h4 className="text-lg font-medium text-white">Featured Artists</h4>
+          
           <button
             type="button"
             onClick={handleAddFeaturedArtist}
-            className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500"
+            className="flex ml-auto items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500"
           >
             <PlusCircle size={16} />
             Add Featured Artist
           </button>
         </div>
+
+        <AuthorsForm 
+        track={track}
+        onChange={onChange}
+        trackNumber={trackNumber}
+      />
 
         {track.featuredArtists.map((artist, index) => (
           <div key={artist.id} className="relative p-4 bg-gray-800 rounded">
@@ -216,6 +229,9 @@ export default function TrackForm({ track, onChange, onFileSelect }: TrackFormPr
               onUpdate={(updated) => handleUpdateFeaturedArtist(index, updated)}
               showRemove={false}
             />
+
+
+
           </div>
         ))}
       </div>

@@ -3,6 +3,7 @@ import { TrackFormData, AlbumMetadata } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlayCircle, PauseCircle, Music2 } from 'lucide-react';
+import { audioManager } from '../app/utils/audioManager';
 
 interface AlbumPreviewProps {
   tracks: TrackFormData[];
@@ -20,7 +21,8 @@ export default function AlbumPreview({
 }: AlbumPreviewProps) {
   const [coverArtPreview, setCoverArtPreview] = useState<string>('/default.png');
   const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
-  const [audioElements, setAudioElements] = useState<HTMLAudioElement[]>([]);
+  const [audioUrls, setAudioUrls] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const mainArtist = albumMetadata.artists[0]?.name || 'Artist';
 
@@ -31,43 +33,60 @@ export default function AlbumPreview({
         setCoverArtPreview(e.target?.result as string);
       };
       reader.readAsDataURL(coverArtFile);
+      return () => reader.abort();
     } else {
       setCoverArtPreview('/default.png');
     }
   }, [coverArtFile]);
 
   useEffect(() => {
-    const newAudioElements = tracks.map(track => {
-      if (track.songFile) {
-        const audio = new Audio(URL.createObjectURL(track.songFile));
-        audio.addEventListener('ended', () => setCurrentlyPlaying(null));
-        return audio;
-      }
-      return null;
-    });
+    // Create object URLs for the audio files, but don't create Audio objects
+    const urls = tracks.map(track => 
+      track.songFile ? URL.createObjectURL(track.songFile) : null
+    );
+    setAudioUrls(urls.filter(Boolean) as string[]);
 
-    setAudioElements(newAudioElements.filter(Boolean) as HTMLAudioElement[]);
-
+    // Clean up URLs on unmount
     return () => {
-      newAudioElements.forEach(audio => {
-        if (audio) {
-          URL.revokeObjectURL(audio.src);
-          audio.remove();
-        }
+      urls.forEach(url => {
+        if (url) URL.revokeObjectURL(url);
       });
     };
   }, [tracks]);
 
-  const handlePlayPause = (index: number) => {
+  const handlePlayPause = async (index: number) => {
+    if (!audioUrls[index]) return;
+
     if (currentlyPlaying === index) {
-      audioElements[index]?.pause();
+      // Already playing this track, pause it
+      audioManager.pause();
       setCurrentlyPlaying(null);
     } else {
-      if (currentlyPlaying !== null && audioElements[currentlyPlaying]) {
-        audioElements[currentlyPlaying].pause();
+      try {
+        setIsLoading(true);
+        
+        // Preload and play using audioManager
+        const audio = await audioManager.preloadAudio(audioUrls[index]);
+        
+        audioManager.play(audio, {
+          play: () => setCurrentlyPlaying(index),
+          pause: () => setCurrentlyPlaying(null),
+          stop: () => setCurrentlyPlaying(null)
+        }, {
+          // Reset startTime to 0 for proper playback
+          startTime: 0,
+          // Set a longer duration for previewing (30 seconds)
+          duration: 30,
+          onError: (error) => {
+            console.error('Error playing track:', error);
+            setCurrentlyPlaying(null);
+          }
+        });
+      } catch (error) {
+        console.error('Failed to preload audio:', error);
+      } finally {
+        setIsLoading(false);
       }
-      audioElements[index]?.play();
-      setCurrentlyPlaying(index);
     }
   };
 
@@ -75,7 +94,6 @@ export default function AlbumPreview({
     const contributors = new Map<string, Set<string>>();
 
     tracks.forEach(track => {
-
       if (track.producer) {
         if (!contributors.has('Producers')) {
           contributors.set('Producers', new Set());
@@ -146,12 +164,12 @@ export default function AlbumPreview({
             <button
               onClick={() => handlePlayPause(index)}
               className="text-white hover:text-blue-400 transition-colors"
-              disabled={!track.songFile}
+              disabled={!track.songFile || isLoading}
             >
               {currentlyPlaying === index ? (
                 <PauseCircle size={24} />
               ) : (
-                <PlayCircle size={24} />
+                <PlayCircle size={24} className={isLoading ? 'opacity-50' : ''} />
               )}
             </button>
 
@@ -159,15 +177,15 @@ export default function AlbumPreview({
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 w-6">{(index + 1).toString().padStart(2, '0')}</span>
                 <div>
-                  <h4 className="font-medium">{track.songTitle || `Track ${index + 1}`}</h4>
+                  <span className="font-medium">{track.songTitle || `Track ${index + 1}`}</span>
+                  {track.isExplicit && (
+                    <span className="px-1.5 ml-2 py-0.5 bg-red-900/50 rounded text-xs">
+                      Explicit
+                    </span>
+                  )}
                   <div className="flex flex-wrap gap-2 text-sm text-gray-400">
                     {track.featuredArtists.length > 0 && (
                       <span>feat. {track.featuredArtists.map(artist => artist.name).join(', ')}</span>
-                    )}
-                    {track.isExplicit && (
-                      <span className="px-1.5 py-0.5 bg-red-900/50 rounded text-xs">
-                        Explicit
-                      </span>
                     )}
                   </div>
                 </div>
@@ -179,7 +197,7 @@ export default function AlbumPreview({
                 <Link
                   href={`https://musicbrainz.org/isrc/${track.isrc}`}
                   target="_blank"
-                  className="text-xs hover:text-blue-400"
+                  className="text-xs text-amber-200 hover:text-purple-700"
                 >
                   ISRC
                 </Link>
@@ -188,7 +206,7 @@ export default function AlbumPreview({
                 <Link
                   href={`https://www.ascap.com/repertory#/ace/search/iswc/${track.iswc}`}
                   target="_blank"
-                  className="text-xs hover:text-blue-400"
+                  className="text-xs text-blue-400 hover:text-purple-700"
                 >
                   ISWC
                 </Link>

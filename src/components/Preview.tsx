@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { CIP60FormData } from '@/types';
 import Image from 'next/image';
+import { PlayCircle, Music2 } from 'lucide-react';
 
 export interface PreviewProps {
   formData: CIP60FormData;
@@ -207,19 +208,40 @@ export default function Preview({ formData }: PreviewProps) {
 
 
 
-        <div className="flex justify-center gap-2 text-xs m-0 text-gray-500">
-          {!formData.isAIGenerated && formData.iswc && <Link href={`https://www.ascap.com/repertory#/ace/search/iswc/${formData.iswc}`} className="text-blue-400" target='_blank'><div>ISWC: {formData.iswc}</div></Link>}
-          {formData.isrc && <Link className="text-amber-200" href={`https://musicbrainz.org/isrc/${formData.isrc}`} target='_blank'><div>ISRC:{formData.isrc}</div></Link>}
-        </div>
+      
 
         {audioUrl && (
-          <div className="w-full max-w-md mx-auto">
-            <audio controls className="w-full">
+          <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+            <button
+              onClick={() => {
+                const audio = document.querySelector('audio');
+                if (audio?.paused) {
+                  audio.play();
+                } else {
+                  audio?.pause();
+                }
+              }}
+              className="text-white hover:text-blue-400 transition-colors"
+            >
+              <PlayCircle size={24} />
+            </button>
+            <div className="flex-grow">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 w-6">01</span>
+                <h4 className="font-medium">{formData.songTitle || 'Track'}</h4>
+              </div>
+            </div>
+            <div className="flex justify-center gap-2 text-xs m-0 text-gray-500">
+          {!formData.isAIGenerated && formData.iswc && <Link href={`https://www.ascap.com/repertory#/ace/search/iswc/${formData.iswc}`} className="text-blue-400" target='_blank'><div>ISWC</div></Link>}
+          {formData.isrc && <Link className="text-amber-200 hover:text-purple-700" href={`https://musicbrainz.org/isrc/${formData.isrc}`} target='_blank'><div>ISRC</div></Link>}
+        </div>
+            <Music2 size={16} className="text-gray-400" />
+            <audio className="hidden">
               <source src={audioUrl} type={formData.songFile?.type} />
-              Your browser does not support the audio element.
             </audio>
+            
           </div>
-        )}
+        )}   
 
         <div className="text-center text-sm text-gray-400">
           {!formData.isAIGenerated ? (
