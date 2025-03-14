@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { IPFSMedia } from "./ipfsMedia";
 import { Asset } from "@/types";
 import { cn } from "@/lib/utils";
-import { getIPFSUrl } from "../app/utils/ipfs";
+import { getIPFSUrl } from "../actions/ipfs";
 
 const extractMetadata = (asset: Asset) => {
   const metadata = asset.metadata_json || {};

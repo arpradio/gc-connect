@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { PlayCircle, PauseCircle, Bot, AlertTriangle, Lock } from 'lucide-react';
+import { PlayCircle, PauseCircle, Bot, AlertTriangle, Lock, Loader } from 'lucide-react';
 import { audioManager } from '../app/utils/audioManager';
-import { getIPFSUrl } from '@/app/utils/ipfs';
+import { getIPFSUrl } from '@/actions/ipfs';
+
+// Cache for already processed URLs
+const urlCache = new Map<string, string>();
 
 interface IPFSMediaProps {
   src: string;
@@ -39,10 +42,12 @@ export function IPFSMedia({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [audioLoaded, setAudioLoaded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef<boolean>(true);
+  const retryCountRef = useRef<number>(0);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -59,30 +64,57 @@ export function IPFSMedia({
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
       }
+
+      // Clean up audio playback if this component was playing
+      if (isPlaying && audioRef.current) {
+        audioManager.pause();
+      }
     };
-  }, []);
+  }, [isPlaying]);
 
   useEffect(() => {
-    try {
-      const ipfsUrl = getIPFSUrl(src);
-      if (ipfsUrl) {
-        setUrl(ipfsUrl);
-        setError(false);
-      } else {
-        setError(true);
-        if (onError && isMountedRef.current) {
-          onError();
+    const processUrl = async () => {
+      try {
+        // First check cache
+        if (urlCache.has(src)) {
+          if (isMountedRef.current) {
+            setUrl(urlCache.get(src)!);
+            setError(false);
+          }
+          return;
+        }
+
+        // For audio, we need to ensure the URL is ready before setting it
+        setIsLoading(true);
+
+        const ipfsUrl = await getIPFSUrl(src);
+        if (ipfsUrl && isMountedRef.current) {
+          // Cache the result
+          urlCache.set(src, ipfsUrl);
+          setUrl(ipfsUrl);
+          setError(false);
+        } else if (isMountedRef.current) {
+          setError(true);
+          if (onError) {
+            onError();
+          }
+        }
+      } catch (err) {
+        if (isMountedRef.current) {
+          console.error('Error loading IPFS URL:', err instanceof Error ? err.message : err);
+          setError(true);
+          if (onError) {
+            onError();
+          }
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoading(false);
         }
       }
-    } catch (err) {
-      if (isMountedRef.current) {
-        console.error('Error loading IPFS URL:', err instanceof Error ? err.message : err);
-        setError(true);
-        if (onError) {
-          onError();
-        }
-      }
-    }
+    };
+
+    processUrl();
   }, [src, onError]);
 
   useEffect(() => {
@@ -113,7 +145,19 @@ export function IPFSMedia({
     }
   }, [type]);
 
-  const togglePlay = () => {
+  const handleAudioCanPlay = () => {
+    if (isMountedRef.current) {
+      setAudioLoaded(true);
+      setIsLoading(false);
+
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    }
+  };
+
+  const togglePlay = async () => {
     if (!audioRef.current || error || isLoading) return;
 
     if (isPlaying) {
@@ -126,23 +170,59 @@ export function IPFSMedia({
         setIsLoading(true);
       }
 
+      // Set a loading timeout in case audio doesn't load
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+
       loadingTimeoutRef.current = setTimeout(() => {
         if (isMountedRef.current) {
           setIsLoading(false);
-          setError(true);
-          if (onError) {
-            onError();
+
+          // Try loading the audio again with a fallback gateway
+          if (retryCountRef.current < 2) {
+            retryCountRef.current++;
+            // Force a reload of the audio element
+            if (audioRef.current) {
+              const currentSrc = audioRef.current.src;
+              audioRef.current.src = '';
+              setTimeout(() => {
+                if (audioRef.current && isMountedRef.current) {
+                  // Try an alternative gateway
+                  const newSrc = currentSrc.replace('ipfs.io', 'cloudflare-ipfs.com');
+                  audioRef.current.src = newSrc;
+                  audioRef.current.load();
+                  togglePlay();
+                }
+              }, 100);
+            }
+          } else {
+            setError(true);
+            if (onError) {
+              onError();
+            }
           }
         }
-      }, 15000);
+      }, 10000);
 
       try {
         abortControllerRef.current = new AbortController();
+
+        // Make sure we have the audio loaded
+        if (!audioLoaded && audioRef.current) {
+          audioRef.current.load();
+        }
 
         audioManager.play(audioRef.current, {
           play: () => {
             if (isMountedRef.current) {
               setIsPlaying(true);
+              setIsLoading(false);
+
+              if (loadingTimeoutRef.current) {
+                clearTimeout(loadingTimeoutRef.current);
+                loadingTimeoutRef.current = null;
+              }
             }
           },
           pause: () => {
@@ -172,22 +252,8 @@ export function IPFSMedia({
               setIsLoading(false);
               if (onError) onError();
             }
-          },
-          onComplete: () => {
-            if (isMountedRef.current) {
-              setIsPlaying(false);
-            }
           }
         });
-
-        if (loadingTimeoutRef.current) {
-          clearTimeout(loadingTimeoutRef.current);
-          loadingTimeoutRef.current = null;
-        }
-
-        if (isMountedRef.current) {
-          setIsLoading(false);
-        }
       } catch (err) {
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
@@ -220,6 +286,20 @@ export function IPFSMedia({
         : 'Unknown audio error';
 
       console.warn(errorMessage);
+
+      // If we haven't retried yet, try an alternative gateway
+      if (retryCountRef.current < 2 && audioRef.current) {
+        retryCountRef.current++;
+        const currentSrc = audioRef.current.src;
+        if (currentSrc.includes('ipfs.io')) {
+          // Try cloudflare gateway instead
+          const newSrc = currentSrc.replace('ipfs.io', 'cloudflare-ipfs.com');
+          audioRef.current.src = newSrc;
+          audioRef.current.load();
+          return;
+        }
+      }
+
       setError(true);
       setIsLoading(false);
       if (onError) {
@@ -228,7 +308,7 @@ export function IPFSMedia({
     }
   };
 
-  if (!url && !error) return null;
+  if (!url && !error && !isLoading) return null;
 
   switch (type) {
     case 'audio':
@@ -262,6 +342,8 @@ export function IPFSMedia({
             >
               {isPlaying ? (
                 <PauseCircle size={24} />
+              ) : isLoading ? (
+                <Loader size={24} className="animate-spin" />
               ) : (
                 <PlayCircle size={24} />
               )}
@@ -276,6 +358,7 @@ export function IPFSMedia({
               src={error ? undefined : url}
               className="hidden"
               preload="metadata"
+              onCanPlay={handleAudioCanPlay}
               onEnded={() => {
                 if (isMountedRef.current) {
                   setIsPlaying(false);
@@ -354,8 +437,9 @@ export function IPFSMedia({
             src={error ? '/default.png' : url}
             alt={alt || ''}
             className={`${className} transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-            width={fill ? 300 : 160}
-            height={fill ? 300 : 160}
+            width={fill ? undefined : 160}
+            height={fill ? undefined : 160}
+            fill={fill}
             onLoadingComplete={() => {
               if (isMountedRef.current) {
                 setIsImageLoading(false);

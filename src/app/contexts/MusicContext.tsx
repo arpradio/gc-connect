@@ -7,7 +7,6 @@ import {
   MusicContextType
 } from "@/types";
 
-// Audio processing class for the equalizer
 class AudioProcessor {
   context: AudioContext | null = null;
   private sourceNode: MediaElementAudioSourceNode | null = null;
@@ -41,7 +40,6 @@ class AudioProcessor {
       this.trebleFilter.type = 'highshelf';
       this.trebleFilter.frequency.value = 3000;
 
-      // Connect nodes individually instead of chaining for better browser compatibility
       this.sourceNode.connect(this.bassFilter);
       this.bassFilter.connect(this.midFilter);
       this.midFilter.connect(this.trebleFilter);
@@ -50,7 +48,6 @@ class AudioProcessor {
 
       this.connected = true;
 
-      // Apply initial settings
       this.setVolume(this.audioElement.volume);
     } catch (error) {
       console.error('Failed to setup Web Audio API:', error);
@@ -138,7 +135,7 @@ const initialPlaylist: TrackType[] = [
 const initialPlaybackState: PlaybackState = {
   isPlaying: false,
   currentTime: 0,
-  volume: 0.8,
+  volume: 0.75,
   isMuted: false,
   isRepeat: false,
   isShuffle: false,
@@ -360,7 +357,6 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const { currentTrack, playlist, playbackState, eqSettings } = state;
 
-  // Memoize event handlers to prevent unnecessary re-creation
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
       dispatch({ type: 'SET_CURRENT_TIME', payload: audioRef.current.currentTime });
@@ -435,13 +431,11 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       audioProcessorRef.current.setVolume(volume);
     }
 
-    // Also update native volume control as fallback
     if (audioRef.current) {
       audioRef.current.volume = playbackState.isMuted ? 0 : playbackState.volume;
     }
   }, [playbackState.volume, playbackState.isMuted]);
 
-  // Set up audio event listeners
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -455,15 +449,13 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     };
   }, [handleTimeUpdate, handleEnded]);
 
-  // Handle audio element state updates
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
 
-    // Only update src if it actually changed
     if (audio.src !== currentTrack.src) {
       audio.src = currentTrack.src;
-      audio.load(); // Ensure media is loaded before attempting to play
+      audio.load();
     }
 
     if (playbackState.isPlaying) {
@@ -479,12 +471,10 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [currentTrack, playbackState.isPlaying, dispatch]);
 
-  // Update current time if it changes significantly (e.g., from seeking)
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    // Only update if the difference is significant to avoid feedback loops
     if (Math.abs(audio.currentTime - playbackState.currentTime) > 1) {
       audio.currentTime = playbackState.currentTime;
     }
@@ -497,12 +487,9 @@ export const MusicProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const togglePlayPause = () => {
-    // Ensure audio processor is initialized on first play
     if (!audioInitializedRef.current && audioProcessorRef.current) {
       audioProcessorRef.current.connect();
       audioInitializedRef.current = true;
-
-      // Apply current settings
       audioProcessorRef.current.setEQ({
         bass: eqSettings.bass,
         mid: eqSettings.mid,

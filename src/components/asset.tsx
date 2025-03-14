@@ -17,11 +17,12 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { any } from "zod";
+import { ByteString } from "@meshsdk/core";
 
 interface FileDetails {
   mediaType?: string;
   name?: string;
-  src?: string;
+  src?: string | any;
   song?: {
     song_title?: string;
     artists?: Array<any> | SongArtists;
@@ -534,8 +535,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
                   onClick={() => handleTrackNavigation("prev")}
                   disabled={currentTrackIndex === 0}
                   className={`p-2 rounded-full ${currentTrackIndex === 0
-                      ? "text-gray-500 cursor-not-allowed"
-                      : "text-white hover:bg-gray-700/50 active:bg-gray-700"
+                    ? "text-gray-500 cursor-not-allowed"
+                    : "text-white hover:bg-gray-700/50 active:bg-gray-700"
                     }`}
                 >
                   <ChevronLeft size={20} />
@@ -547,8 +548,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
                   onClick={() => handleTrackNavigation("next")}
                   disabled={currentTrackIndex >= audioFiles.length - 1}
                   className={`p-2 rounded-full ${currentTrackIndex >= audioFiles.length - 1
-                      ? "text-gray-500 cursor-not-allowed"
-                      : "text-white hover:bg-gray-700/50 active:bg-gray-700"
+                    ? "text-gray-500 cursor-not-allowed"
+                    : "text-white hover:bg-gray-700/50 active:bg-gray-700"
                     }`}
                 >
                   <ChevronRight size={20} />
@@ -797,8 +798,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
                       <span className="text-sm">
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${metadata.isAIGenerated
-                              ? "bg-purple-900/60 text-purple-100 border border-purple-700/50"
-                              : "bg-gray-800 text-gray-300 border border-gray-700/50"
+                            ? "bg-purple-900/60 text-purple-100 border border-purple-700/50"
+                            : "bg-gray-800 text-gray-300 border border-gray-700/50"
                             }`}
                         >
                           {metadata.isAIGenerated ? "Yes" : "No"}
@@ -814,8 +815,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
                       <span className="text-sm">
                         <span
                           className={`px-2 py-0.5 rounded text-xs ${metadata.isExplicit
-                              ? "bg-red-900/60 text-red-100 border border-red-700/50"
-                              : "bg-gray-800 text-gray-300 border border-gray-700/50"
+                            ? "bg-red-900/60 text-red-100 border border-red-700/50"
+                            : "bg-gray-800 text-gray-300 border border-gray-700/50"
                             }`}
                         >
                           {metadata.isExplicit ? "Explicit" : "Clean"}
@@ -876,8 +877,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
             <div className="flex gap-1 flex-wrap mb-3 flex-shrink-0">
               <button
                 className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg transition-colors border ${activeTab === "tracks"
-                    ? "bg-amber-900/30 text-amber-100 border-amber-700/50"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
+                  ? "bg-amber-900/30 text-amber-100 border-amber-700/50"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
                   }`}
                 onClick={() => setActiveTab("tracks")}
               >
@@ -885,8 +886,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
               </button>
               <button
                 className={`px-3 py-1.5 text-xs sm:text-sm border rounded-lg transition-colors ${activeTab === "metadata"
-                    ? "bg-blue-900/30 text-blue-100 border-blue-700/50"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
+                  ? "bg-blue-900/30 text-blue-100 border-blue-700/50"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
                   }`}
                 onClick={() => setActiveTab("metadata")}
               >
@@ -894,8 +895,8 @@ export const AssetDetails: React.FC<AssetDetailsProps> = ({
               </button>
               <button
                 className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg border transition-colors ${activeTab === "json"
-                    ? "bg-purple-900/30 text-purple-100 border-purple-700/50"
-                    : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
+                  ? "bg-purple-900/30 text-purple-100 border-purple-700/50"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-zinc-700/50"
                   }`}
                 onClick={() => setActiveTab("json")}
               >

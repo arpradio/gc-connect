@@ -44,6 +44,9 @@ importers:
       arweave:
         specifier: ^1.15.5
         version: 1.15.5
+      bech32:
+        specifier: ^2.0.0
+        version: 2.0.0
       canvas:
         specifier: ^3.1.0
         version: 3.1.0

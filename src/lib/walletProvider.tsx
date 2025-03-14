@@ -83,31 +83,34 @@ export interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const gcScript = {
-  title: "🎼 ARP Radio - Connect Wallet",
-  description: "Connect to ARP Radio via GameChanger wallet",
-  type: "script",
-  exportAs: "connect",
-  returnURLPattern:
-    typeof window !== "undefined"
-      ? window.location.origin + window.location.pathname
-      : "http://localhost:3000/wallet/wallet-callback",
-  run: {
-    data: {
-      type: "script",
-      run: {
-        name: {
-          type: "getName",
+  "title": "ARP Radio | Cardano's Music Index and Player :notes: :headphones: :musical_score:",
+  "description": "Connect to ARP Radio via GameChanger wallet",
+  "type": "script",
+  "exportAs": "connect",
+  "returnURLPattern": "http://localhost:3000/wallet/wallet-callback",
+  "run": {
+    "data": {
+      "type": "script",
+      "run": {
+        "name": {
+          "type": "getName"
         },
-        address: {
-          type: "getCurrentAddress",
+        "address": {
+          "type": "getCurrentAddress"
         },
-        addressInfo: {
-          type: "macro",
-          run: "{getAddressInfo(get('cache.data.address'))}",
+        "spendPubKey": {
+          "type": "getSpendingPublicKey"
         },
-      },
-    },
-  },
+        "stakePubKey": {
+          "type": "getStakingPublicKey"
+        },
+        "addressInfo": {
+          "type": "macro",
+          "run": "{getAddressInfo(get('cache.data.address'))}"
+        }
+      }
+    }
+  }
 };
 
 interface WalletConnectModalProps {

@@ -71,19 +71,12 @@ class AudioManager {
     }, 50) as unknown as number;
   }
 
-  /**
-   * Preloads an audio file and returns a promise that resolves with the audio element
-   */
   async preloadAudio(src: string): Promise<HTMLAudioElement> {
-    // Check if we already have this audio in the cache
     if (this.audioCache.has(src)) {
       return this.audioCache.get(src)!;
     }
 
-    // Create a new audio element and load the source
     const audio = new Audio();
-
-    // Create a promise that resolves when the audio is loaded
     const loadPromise = new Promise<HTMLAudioElement>((resolve, reject) => {
       const onCanPlayThrough = () => {
         audio.removeEventListener('canplaythrough', onCanPlayThrough);
@@ -101,14 +94,11 @@ class AudioManager {
       audio.addEventListener('error', onError);
     });
 
-    // Set the source and start loading
     audio.src = src;
     audio.load();
 
-    // Add to cache and manage cache size
     this.audioCache.set(src, audio);
 
-    // If cache is too large, remove the oldest entry
     if (this.audioCache.size > this.MAX_CACHE_SIZE) {
       const oldestKey = this.audioCache.keys().next().value;
       if (oldestKey !== undefined) {
