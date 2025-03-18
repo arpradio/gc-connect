@@ -255,17 +255,27 @@ export default function WalletPage() {
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <svg
-                  className="h-4 w-4 mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22h6v-6M13.5 18.9A9 9 0 0 1 3 12.1L3 16" />
-                </svg>
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+          
+                <path d="M19 4.5l2-2.5v6h-6l2.5-2" />
+           
+                <path d="M12 3a9 9 0 0 1 7 3.5" />
+                <path d="M3 12a9 9 0 0 1 9-9" />
+                
+             
+                <path d="M5 19.5l-2 2.5v-6h6l-2.5 2" />
+                
+       
+                <path d="M12 21a9 9 0 0 1-7-3.5" />
+                <path d="M21 12a9 9 0 0 1-9 9" />
+              </svg>
               )}
               Refresh Assets
             </Button>

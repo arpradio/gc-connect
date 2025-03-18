@@ -335,7 +335,7 @@ const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
           <TabsContent value="wallet-info" className="space-y-4 mt-4">
             <Card className="bg-neutral-900 border-neutral-700">
               <CardHeader>
-                <CardTitle className="text-lg text-white">Certificate Details</CardTitle>
+                <CardTitle className="text-lg text-white">Credential Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {walletData.data.spendPubKey && (
