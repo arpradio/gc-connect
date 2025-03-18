@@ -74,15 +74,12 @@ const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
           console.error('Failed to load GameChanger library:', error);
           setConnectionError('Failed to load wallet connection library');
         }
-      } else if (window.gc) {
-        setGcLibLoaded(true);
-      }
+      } 
     };
     
     loadGcLib();
   }, []);
 
-  // Check for stored wallet connection on mount
   useEffect((): void => {
     const savedConnection = localStorage.getItem('walletConnection');
     if (savedConnection) {
@@ -247,8 +244,6 @@ const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
                       {walletData.data.address}
                     </span>
                     <Button
-                      variant="default"
-                      size="sm"
                       className="ml-2 text-neutral-400 hover:text-white"
                       onClick={copyAddress}
                     >

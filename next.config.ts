@@ -25,11 +25,9 @@ const nextConfig = {
       serverActions: true,
     },
     typescript: {
-      // Temporarily ignore TypeScript errors in build process
       ignoreBuildErrors: true,
     },
     eslint: {
-      // Temporarily ignore ESLint errors in build process
       ignoreDuringBuilds: true,
     },
   };
