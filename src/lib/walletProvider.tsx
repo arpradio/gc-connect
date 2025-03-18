@@ -135,15 +135,15 @@ const WalletConnectModal: FC<WalletConnectModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-sky-950 border border-zinc-700 p-6 rounded-lg shadow-lg w-full max-w-md">
+    <div className="fixed inset-0 bg-neutral-800 rounded-xl  flex items-center justify-center z-50">
+      <div className="bg-black border border-zinc-700 p-6 rounded-xl shadow-lg w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-white">
             Connect GameChanger Wallet
           </h3>
           <button
             onClick={onClose}
-            className="text-zinc-400 hover:text-white"
+            className="text-zinc-400 hover:text-white bg-transparent"
             disabled={inProgress}
           >
             ✕

@@ -100,8 +100,8 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
          
         
             <WalletConnectButton 
-              variant="default" 
-              size="sm"
+      
+            
               className="border-nuetral-600 bg-black/30 hover:bg-neutral-800 hover:text-amber-400 transition-all duration-300 shadow-sm shadow-amber-500/20"
             />
           </div>
@@ -163,7 +163,6 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
           
           <div className="pt-4 pb-2 px-4">
             <WalletConnectButton 
-              variant="outline"
               className="w-full border-zinc-600 bg-black/30 hover:bg-zinc-800 hover:text-amber-400 transition-all duration-300"
             />
           </div>

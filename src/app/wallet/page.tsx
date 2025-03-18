@@ -232,7 +232,7 @@ export default function WalletPage() {
         <TabsList className="grid w-full grid-cols-3 mb-6 bg-neutral-800/70">
         <TabsTrigger value="all-assets" className="bg-slate-700 data-[state=active]:bg-neutral-300">Assets</TabsTrigger>
           <TabsTrigger value="transactions" className="bg-slate-700 data-[state=active]:bg-neutral-300">Send</TabsTrigger>
-          <TabsTrigger value="wallet-info" className="bg-slate-700 data-[state=active]:bg-neutral-300">Wallet Config</TabsTrigger>
+          <TabsTrigger value="wallet-info" className="bg-slate-700 data-[state=active]:bg-neutral-300">Wallet Details</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all-assets" className="space-y-6">
@@ -241,8 +241,7 @@ export default function WalletPage() {
               All Assets ({isLoading ? '...' : assets.length})
             </h2>
             <Button
-              size="sm"
-              variant="default"
+              
               className="bg-black/50 border-neutral-700 hover:bg-black/40 text-neutral-00"
               onClick={() => {
                 setIsLoading(true);
