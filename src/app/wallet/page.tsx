@@ -5,9 +5,8 @@ import { useWallet } from '@/lib/walletProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Music, Loader2, Wallet, ExternalLink } from 'lucide-react';
+import { CreditCard, Wallet2, Loader2, Wallet, ExternalLink } from 'lucide-react';
 import WalletAssetCard from '@/components/walletCard';
-import { parseAssetMetadata } from '@/lib/metadataParser';
 
 type AssetMetadata = {
   name?: string;
@@ -24,16 +23,6 @@ type Asset = {
   quantity: number;
   fingerprint: string;
   metadata_json: AssetMetadata;
-};
-
-type ParsedMetadata = {
-  title: string;
-  artists: string[];
-  genres: string[];
-  duration?: string;
-  isExplicit?: boolean;
-  isAIGenerated?: boolean;
-  coverImage?: string;
 };
 
 export default function WalletPage() {
@@ -145,13 +134,6 @@ export default function WalletPage() {
     return `${amount.toLocaleString()} ₳`;
   };
 
-  const isMusicToken = (asset: Asset): boolean => {
-    const metadata = parseAssetMetadata(asset);
-    return !!metadata.duration || metadata.genres.length > 0 || metadata.artists.length > 0;
-  };
-
-  const musicTokens = assets.filter(isMusicToken);
-
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -164,34 +146,22 @@ export default function WalletPage() {
   }
 
   const renderEmptyState = () => (
-    <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
+    <Card className="bg-neutral-800/50 border-neutral-700 p-8 text-center">
       <div className="flex flex-col items-center">
-        <div className="w-16 h-16 rounded-full bg-slate-700/50 flex items-center justify-center mb-4">
-          <Wallet className="h-8 w-8 text-slate-500" />
+        <div className="w-16 h-16 rounded-full bg-neutral-700/50 flex items-center justify-center mb-4">
+          <Wallet className="h-8 w-8 text-neutral-500" />
         </div>
         <h3 className="text-xl font-medium text-white mb-3">No Assets Found</h3>
         <p className="text-zinc-400 mb-6 max-w-md mx-auto">
           This wallet doesn't have any native tokens or NFTs. Asset tokens will appear here once you receive them.
         </p>
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 max-w-md mx-auto w-full">
-          <Button
-            className="bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            Browse Marketplace
-          </Button>
-          <Button
-            variant="outline"
-            className="bg-black/20 border-slate-700 hover:bg-black/40 text-zinc-300"
-          >
-            Receive Assets
-          </Button>
-        </div>
+
       </div>
     </Card>
   );
 
   const renderErrorState = () => (
-    <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
+    <Card className="bg-neutral-800/50 border-neutral-700 p-8 text-center">
       <div className="flex flex-col items-center">
         <div className="w-16 h-16 rounded-full bg-red-900/30 flex items-center justify-center mb-4">
           <ExternalLink className="h-8 w-8 text-red-400" />
@@ -206,7 +176,7 @@ export default function WalletPage() {
             setFetchError(null);
             setRefreshTrigger(prev => prev + 1);
           }}
-          className="bg-slate-700 hover:bg-slate-600 text-white"
+          className="bg-neutral-700 hover:bg-neutral-600 text-white"
         >
           Retry
         </Button>
@@ -219,7 +189,7 @@ export default function WalletPage() {
       <h1 className="text-3xl font-bold text-white mb-6">Wallet Details</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Card className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors">
+        <Card className="bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 transition-colors">
           <CardHeader className="pb-2">
             <CardTitle className="text-zinc-300 text-lg">Balance</CardTitle>
           </CardHeader>
@@ -228,7 +198,7 @@ export default function WalletPage() {
               <CreditCard className="h-8 w-8 text-amber-400 mr-3" />
               <div className="text-3xl font-bold text-white">
                 {isBalanceLoading ? (
-                  <div className="h-8 w-24 bg-slate-700 animate-pulse rounded"></div>
+                  <div className="h-8 w-24 bg-neutral-700 animate-pulse rounded"></div>
                 ) : (
                   formatAda(walletData?.data.balance)
                 )}
@@ -237,16 +207,16 @@ export default function WalletPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors">
+        <Card className="bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 transition-colors">
           <CardHeader className="pb-2">
             <CardTitle className="text-zinc-300 text-lg">Assets</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
-              <Music className="h-8 w-8 text-purple-400 mr-3" />
+              <Wallet2 className="h-8 w-8 text-purple-400 mr-3" />
               <div className="text-3xl font-bold text-white">
                 {isLoading ? (
-                  <div className="h-8 w-12 bg-slate-700 animate-pulse rounded"></div>
+                  <div className="h-8 w-12 bg-neutral-700 animate-pulse rounded"></div>
                 ) : (
                   assets.length
                 )}
@@ -256,60 +226,8 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          My Music Tokens ({isLoading ? '...' : musicTokens.length})
-        </h2>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[1, 2].map((_, index) => (
-              <Card key={index} className="bg-slate-800/50 border-slate-700 overflow-hidden">
-                <div className="flex flex-col md:flex-row">
-                  <div className="h-40 w-full md:w-40 bg-slate-700 animate-pulse"></div>
-                  <div className="p-4 flex-1">
-                    <div className="h-6 w-3/4 mb-2 bg-slate-700 animate-pulse"></div>
-                    <div className="h-4 w-1/2 mb-4 bg-slate-700 animate-pulse"></div>
-                    <div className="h-4 w-full mb-2 bg-slate-700 animate-pulse"></div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : fetchError ? (
-          renderErrorState()
-        ) : musicTokens.length === 0 ? (
-          <Card className="bg-slate-800/50 border-slate-700 p-8 text-center">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 rounded-full bg-slate-700/50 flex items-center justify-center mb-4">
-                <Music className="h-8 w-8 text-slate-500" />
-              </div>
-              <h3 className="text-xl font-medium text-white mb-3">No Music Tokens Found</h3>
-              <p className="text-zinc-400 mb-6 max-w-md mx-auto">
-                You don't have any music tokens in your wallet yet. Browse the marketplace to discover music NFTs.
-              </p>
-              <Button
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                Browse Music Marketplace
-              </Button>
-            </div>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {musicTokens.map(asset => (
-              <WalletAssetCard
-                key={asset.assetId}
-                asset={asset}
-                onClick={() => setSelectedAsset(asset)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
       <Tabs defaultValue="all-assets" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 mb-6 bg-slate-800/70">
+        <TabsList className="grid w-full grid-cols-1 mb-6 bg-neutral-800/70">
           <TabsTrigger value="all-assets">All Assets</TabsTrigger>
         </TabsList>
 
@@ -321,7 +239,7 @@ export default function WalletPage() {
             <Button
               size="sm"
               variant="outline"
-              className="bg-black/20 border-slate-700 hover:bg-black/40 text-zinc-300"
+              className="bg-black/20 border-neutral-700 hover:bg-black/40 text-zinc-300"
               onClick={() => {
                 setIsLoading(true);
                 setFetchError(null);
@@ -353,13 +271,13 @@ export default function WalletPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[1, 2].map((_, index) => (
-                <Card key={index} className="bg-slate-800/50 border-slate-700 overflow-hidden">
+                <Card key={index} className="bg-neutral-800/50 border-neutral-700 overflow-hidden">
                   <div className="flex flex-col md:flex-row">
-                    <div className="h-40 w-full md:w-40 bg-slate-700 animate-pulse"></div>
+                    <div className="h-40 w-full md:w-40 bg-neutral-700 animate-pulse"></div>
                     <div className="p-4 flex-1">
-                      <div className="h-6 w-3/4 mb-2 bg-slate-700 animate-pulse"></div>
-                      <div className="h-4 w-1/2 mb-4 bg-slate-700 animate-pulse"></div>
-                      <div className="h-4 w-full mb-2 bg-slate-700 animate-pulse"></div>
+                      <div className="h-6 w-3/4 mb-2 bg-neutral-700 animate-pulse"></div>
+                      <div className="h-4 w-1/2 mb-4 bg-neutral-700 animate-pulse"></div>
+                      <div className="h-4 w-full mb-2 bg-neutral-700 animate-pulse"></div>
                     </div>
                   </div>
                 </Card>

@@ -31,25 +31,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    // On initial connect, the balance should already be in the wallet data
-    // No need to fetch from Blockfrost
     if (initialConnect) {
       console.log('Initial connect - using wallet provided balance');
-      // Return an empty response since the balance is already in the wallet data
       return NextResponse.json({ lovelace: '0' });
     }
 
-    // For subsequent balance refreshes, fetch from Blockfrost
     console.log('Fetching balance data from Blockfrost');
     const balance = await fetchAddressBalance(address);
-
-    // Return the balance data
     return NextResponse.json(balance);
 
   } catch (error) {
     console.error('Error fetching balance:', error);
     return NextResponse.json(
-      { lovelace: '0' } // Return zero balance on error instead of an error response
+      { lovelace: '0' } 
     );
   }
 }
@@ -60,9 +54,8 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
 
   if (!apiKey) {
     console.log('BLOCKFROST_API_KEY is not defined, returning mock data');
-    // Return sample data for testing
     return {
-      lovelace: '25000000', // 25 ADA in lovelace
+      lovelace: 'NaN', 
     };
   }
 
@@ -76,7 +69,6 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
         'project_id': apiKey,
         'Content-Type': 'application/json'
       },
-      // Add cache control headers to avoid stale data
       cache: 'no-store'
     });
 
@@ -86,8 +78,7 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
       }
 
       console.error(`Blockfrost API error: ${response.status} ${response.statusText}`);
-      // Return zero balance instead of throwing an error
-      return { lovelace: '0' };
+      return { lovelace: 'NaN' };
     }
 
     const data = await response.json() as BlockfrostAddressResponse;
@@ -107,7 +98,6 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
     };
   } catch (error) {
     console.error('Error fetching address balance:', error);
-    // Return zero balance instead of throwing an error
     return { lovelace: '0' };
   }
 };

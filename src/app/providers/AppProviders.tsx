@@ -1,7 +1,6 @@
 'use client';
 
 import { type FC, type ReactNode, useEffect } from 'react';
-import { MusicProvider } from '@/app/contexts';
 import { WalletProvider } from '@/lib/walletProvider';
 
 type AppProvidersProps = {
@@ -34,9 +33,7 @@ export const AppProviders: FC<AppProvidersProps> = ({ children }): React.ReactEl
   return (
 
     <WalletProvider>
-      <MusicProvider>
-        {children}
-      </MusicProvider>
+      {children}
     </WalletProvider>
 
   );

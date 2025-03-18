@@ -2,26 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Styles */
 body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-input {
-  text-align: center;
-  font-weight: bold;
-}
-
-#record:hover {
-  background-image: url("/wave.gif");
-  background-size: cover;
-  border-color: gold;
-  color: gold
-}
-
-body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f0f2f5;
-  color: #333;
+  font-family: 'Inter', sans-serif;
+  background-color: #fdfdfd; /* Softer neutral background */
+  color: #404040; /* Slightly lighter dark for text */
   margin: 0;
   padding: 0;
   display: flex;
@@ -29,18 +14,25 @@ body {
   min-height: 100vh;
 }
 
+/* Header */
 header {
-  background-color: #4a90e2;
+  background-color: #fefefe; /* Very light header background */
+  border-bottom: 1px solid #ededed; /* Subtle lighter border */
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Gentle shadow */
+  text-align: center;
 }
 
+header h1 {
+  font-size: 1.5rem;
+  color: #4a4a4a; /* Balanced tone for header text */
+}
 
-
+/* Navigation */
 nav ul {
   list-style: none;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   padding: 0;
   margin: 0;
 }
@@ -50,95 +42,102 @@ nav ul li {
 }
 
 nav ul li a {
-  color: #fff;
+  color: #7d7d7d; /* Lighter gray for links */
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s, background-color 0.3s;
+}
+
+nav ul li a:hover {
+  color: #ffffff;
+  background-color: #66aaff; /* Softer blue highlight */
+  border-radius: 0.25rem;
+}
+
+/* Main Content */
+.main-layout {
+  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-layout .card {
+  background-color: #ffffff; /* Lighter card */
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer card shadow */
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Buttons */
+button {
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
+  color: #ffffff;
+  background-color: #66aaff; /* Lighter blue for buttons */
+  border: none;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #3388cc; /* Lighter hover effect */
+}
+
+/* Footer */
+footer {
+  background-color: #fefefe; /* Lighter footer */
+  color: #7d7d7d; /* Lighter text */
+  border-top: 1px solid #ededed; /* Subtle border */
+  text-align: center;
+  padding: 1rem;
+  margin-top: auto;
+}
+
+footer a {
+  color: #66aaff; /* Lighter blue for links */
   text-decoration: none;
   font-weight: bold;
 }
 
-footer {
-  background-color: #333;
-  color: #fff;
-  padding: 1rem 2rem;
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Inputs */
+input, textarea {
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  max-width: 500px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e2e2; /* Lighter border */
+  border-radius: 0.25rem;
+  background-color: #ffffff;
+  color: #333333;
+  transition: border-color 0.3s;
+}
+
+input:focus, textarea:focus {
+  border-color: #66aaff; /* Subtle focus highlight */
+  outline: none;
+}
+
+/* Utility Classes */
+.shadow-small {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-large {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.text-center {
   text-align: center;
-  margin-top: auto;
-}
-
-.main-layout {
-  padding: 2rem;
-  flex: 1;
-}
-
-
-label {
-
-  text-align: center;
-  font-weight: bold;
-  font-family: monospace;
-}
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
 }

@@ -83,8 +83,8 @@ export interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const gcScript = {
-  "title": "ARP Radio | Cardano's Music Index and Player :notes: :headphones: :musical_score:",
-  "description": "Connect to ARP Radio via GameChanger wallet",
+  "title": `Connect to ${process.env.COMPANY_NAME} `,
+  "description": `Connect to ${process.env.COMPANY_NAME} via GameChanger wallet`,
   "type": "script",
   "exportAs": "connect",
   "returnURLPattern": "http://localhost:3000/wallet/wallet-callback",

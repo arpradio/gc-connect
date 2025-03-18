@@ -26,12 +26,12 @@ const WalletCallback: FC = () => {
   }, [router, handleWalletResponse]);
 
   return (
-    <div className="flex items-center justify-center bg-sky-950">
+    <div className="flex items-center justify-center bg-slate-500">
       <div className="bg-black/30 border border-amber-500/30 p-8 rounded-lg shadow-lg">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500 mb-4"></div>
           <h2 className="text-xl font-medium text-white mb-2">Processing Wallet Connection</h2>
-          <p className="text-zinc-400 text-center">Please wait while we complete your wallet connection...</p>
+          <p className="text-slate-400 text-center">Please wait while we complete your wallet connection...</p>
         </div>
       </div>
     </div>
