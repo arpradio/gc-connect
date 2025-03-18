@@ -141,7 +141,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
       {isConnected && isExpanded && (
         <div 
           ref={dropdownRef}
-          className="absolute right-0 z-50 w-full min-w-[300px] bg-netural-950 border border-amber-500/30 rounded-lg shadow-lg shadow-black/50 overflow-hidden top-full"
+          className="absolute right-0 z-50 w-full min-w-[300px] bg-neutral-900 border-[1px] border-neutral-500 rounded-xl shadow-lg shadow-black/50 overflow-hidden top-full"
         >
           <div className="p-4 space-y-4">
             <div className="flex flex-col space-y-1">
@@ -154,7 +154,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
                  
                   <button 
                     onClick={copyToClipboard}
-                    className="p-1 rounded-md hover:bg-black/40 transition-colors"
+                    className="p-1 rounded-md bg-transparent hover:bg-black transition-colors"
                     title="Copy address"
                   >
                     {copySuccess ? 

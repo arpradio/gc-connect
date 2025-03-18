@@ -13,7 +13,7 @@ const GameChangerModal: React.FC<GameChangerModalProps> = ({ isOpen, onClose, gc
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative w-full max-w-md p-2 mx-auto">
-        <div className="relative bg-gray-700 rounded-lg border border-gray-700 overflow-hidden">
+        <div className="relative bg-neutral-700 rounded-lg border border-gray-700 overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <h3 className="text-xl font-semibold text-white">
               Complete Transaction

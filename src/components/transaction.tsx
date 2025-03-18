@@ -58,7 +58,7 @@ const TransactionComponent: React.FC<TransactionComponentProps> = ({
     const lovelace = Math.round(parsedAmount * 1000000);
     return lovelace.toString();
   };
-  
+
   const sendTransaction = async (): Promise<void> => {
     if (!isWalletConnected) {
       setValidationError('Wallet not connected');
@@ -165,13 +165,25 @@ const TransactionComponent: React.FC<TransactionComponentProps> = ({
       setIsProcessing(true);
       
       if (typeof window !== 'undefined' && window.gc) {
-        const resultObj = await window.gc.encodings.msg.decoder(responseData);
+        type TransactionResponse = {
+          exports?: {
+            SendTransaction?: string | string[];
+            [key: string]: unknown;
+          };
+          error?: {
+            message: string;
+            [key: string]: unknown;
+          };
+        };
+        
+        const resultObj = await window.gc.encodings.msg.decoder(responseData) as TransactionResponse;
         console.log('Transaction response:', resultObj);
         
-        if (resultObj.exports?.SendTransaction) {
-          const txHash = Array.isArray(resultObj.exports.SendTransaction) 
-            ? resultObj.exports.SendTransaction[0] 
-            : resultObj.exports.SendTransaction;
+        if (resultObj.exports && 'SendTransaction' in resultObj.exports) {
+          const txResult = resultObj.exports.SendTransaction;
+          const txHash = Array.isArray(txResult) 
+            ? txResult[0] 
+            : txResult;
             
           if (txHash) {
             setTxHash(typeof txHash === 'string' ? txHash : String(txHash));
@@ -340,6 +352,7 @@ const TransactionComponent: React.FC<TransactionComponentProps> = ({
         </CardFooter>
       </Card>
       
+      {/* Transaction Modal */}
       <Dialog open={txModalOpen} onOpenChange={setTxModalOpen}>
         <DialogContent className="bg-neutral-900 border-neutral-700 text-white">
           <DialogHeader>
@@ -351,7 +364,7 @@ const TransactionComponent: React.FC<TransactionComponentProps> = ({
           
           <div className="flex flex-col items-center justify-center space-y-4">
             <div className="bg-white p-4 rounded-lg" id="tx-qrcode-container">
-
+              {/* QR code will be inserted here */}
               {txUrl && (
                 <div className="bg-neutral-800 p-3 rounded-lg max-w-xs overflow-hidden text-xs text-neutral-300 break-all">
                   {txUrl}
