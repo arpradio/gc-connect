@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Wallet2, Loader2, Wallet, ExternalLink } from 'lucide-react';
 import WalletAssetCard from '@/components/walletCard';
+import TransactionComponent from '@/components/transaction';
+import GameChangerWalletIntegration from '@/components/walletInfo';
 
 type AssetMetadata = {
   name?: string;
@@ -300,6 +302,9 @@ export default function WalletPage() {
           )}
         </TabsContent>
       </Tabs>
+    <GameChangerWalletIntegration/>
+
+    
     </div>
   );
 }

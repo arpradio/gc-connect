@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export default function Footer(): React.ReactElement {
   const currentYear = new Date().getFullYear();
-  const logo = process.env.LOGO_SRC as string
+  const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-neutral-800 backdrop-blur-md border-t border-neutral-500 transition-all duration-300 z-40">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 h-full flex flex-col relative">
@@ -31,7 +31,7 @@ export default function Footer(): React.ReactElement {
           <div className="text-gray-400 text-sm text-right">
             <p>Built leveraging GameChanger wallet</p>
             <div className="flex justify-end items-center">
-              <p>© {currentYear} {process.env.COMPANY_NAME}</p>
+              <p>© {currentYear} {process.env.NEXT_PUBLIC_COMPANY_NAME}</p>
             </div>
           </div>
         </div>

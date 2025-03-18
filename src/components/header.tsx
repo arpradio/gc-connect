@@ -23,7 +23,7 @@ const Header: FC = (): React.ReactElement => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [epoch, setEpoch] = useState<number | null>(null);
   const [isNetworkConnected, setIsNetworkConnected] = useState<boolean>(false);
-const logo = process.env.LOGO_SRC as string
+const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
   const toggleMenu = (): void => {
     setIsMenuOpen((prev) => !prev);
   };

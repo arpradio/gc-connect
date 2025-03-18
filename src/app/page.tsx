@@ -2,7 +2,7 @@ import React, { type FC } from 'react';
 import { Zap } from 'lucide-react';
 import Image from 'next/image';
 
-const logo  = process.env.LOGO_SRC as string ;
+const logo  = process.env.NEXT_PUBLIC_LOGO_SRC as string ;
 
 const Home: FC = (): React.ReactElement => {
 
@@ -32,9 +32,10 @@ const Home: FC = (): React.ReactElement => {
 
             <span className="text-xl text-gray-300 mx-auto mt-4">       <div className="relative">
               <Zap size={48} className="text-white text-center w-fit mx-auto" />
-              <h1>Cardano application leveraging GameChanger wallet!</h1>
+              <h1>{process.env.NEXT_PUBLIC_COMPANY_NAME}</h1>
+              <h2>Cardano application leveraging GameChanger wallet!</h2>
               <div className="absolute  mx-auto inset-0 blur-md bg-neutral-500 rounded-full opacity-30 "> </div>
-<p className='h-full text-[1rem] p-12'>A cool paragraph about the website!  Isn't this super cool, and not a total waste of time?!!!  We hope you agree!</p>
+<p className='h-full text-[1rem] p-12'>A cool paragraph about {process.env.NEXT_PUBLIC_COMPANY_NAME}!  Isn't this super cool, and not a total waste of time?!!!  We hope you agree!</p>
             </div>
             </span></div>
  
