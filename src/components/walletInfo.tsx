@@ -1,23 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Wallet, ExternalLink, Copy, Check, ArrowRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const GameChangerWalletIntegration = () => {
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [walletData, setWalletData] = useState(null);
-  const [qrModalOpen, setQrModalOpen] = useState(false);
-  const [walletUrl, setWalletUrl] = useState('');
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [connectionError, setConnectionError] = useState(null);
-  const [gcLibLoaded, setGcLibLoaded] = useState(false);
+type AddressInfo = {
+  readonly network?: string;
+  readonly networkId?: number;
+  readonly rewardAddress?: string;
+  readonly paymentKeyHash?: string;
+  readonly stakingKeyHash?: string;
+  readonly isBase?: boolean;
+  readonly isEnterprise?: boolean;
+  readonly isReward?: boolean;
+  [key: string]: unknown;
+};
+
+type PubKeyInfo = {
+  readonly pubKeyHex: string;
+  readonly pubKeyHashHex: string;
+  readonly derivationKind: string;
+};
+
+type WalletData = {
+  readonly name?: string;
+  readonly address: string;
+  readonly addressInfo?: AddressInfo;
+  readonly spendPubKey?: PubKeyInfo;
+  readonly stakePubKey?: PubKeyInfo;
+  readonly salt?: string;
+  readonly balance?: number;
+};
+
+type ConnectResponse = {
+  readonly data: WalletData;
+  readonly hash?: string;
+  readonly sign?: {
+    readonly signature: string;
+    readonly key: string;
+  };
+};
+
+const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
+  const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [walletData, setWalletData] = useState<ConnectResponse | null>(null);
+  const [qrModalOpen, setQrModalOpen] = useState<boolean>(false);
+  const [walletUrl, setWalletUrl] = useState<string>('');
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [gcLibLoaded, setGcLibLoaded] = useState<boolean>(false);
 
   // Load GameChanger library
-  useEffect(() => {
-    const loadGcLib = async () => {
+  useEffect((): void => {
+    const loadGcLib = async (): Promise<void> => {
       if (typeof window !== 'undefined' && !window.gc) {
         try {
           const script = document.createElement('script');
@@ -25,9 +62,9 @@ const GameChangerWalletIntegration = () => {
           script.async = true;
           
           // Create a promise to wait for the script to load
-          const loadPromise = new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
+          const loadPromise = new Promise<void>((resolve, reject): void => {
+            script.onload = (): void => resolve();
+            script.onerror = (): void => reject();
           });
           
           document.body.appendChild(script);
@@ -46,11 +83,11 @@ const GameChangerWalletIntegration = () => {
   }, []);
 
   // Check for stored wallet connection on mount
-  useEffect(() => {
+  useEffect((): void => {
     const savedConnection = localStorage.getItem('walletConnection');
     if (savedConnection) {
       try {
-        const parsedData = JSON.parse(savedConnection);
+        const parsedData = JSON.parse(savedConnection) as ConnectResponse;
         setWalletData(parsedData);
         setIsConnected(true);
       } catch (err) {
@@ -60,7 +97,7 @@ const GameChangerWalletIntegration = () => {
     }
   }, []);
 
-  const connectWallet = async () => {
+  const connectWallet = async (): Promise<void> => {
     if (!gcLibLoaded) {
       setConnectionError('GameChanger library not loaded yet. Please try again.');
       return;
@@ -114,6 +151,10 @@ const GameChangerWalletIntegration = () => {
         }
       };
 
+      if (typeof window === 'undefined' || !window.gc) {
+        throw new Error('GameChanger library not available');
+      }
+
       const url = await window.gc.encode.url({
         input: JSON.stringify(gcScript),
         apiVersion: "2",
@@ -125,18 +166,22 @@ const GameChangerWalletIntegration = () => {
       setQrModalOpen(true);
     } catch (error) {
       console.error('Error connecting to wallet:', error);
-      setConnectionError(error.message || 'Failed to connect to wallet');
+      setConnectionError(error instanceof Error ? error.message : 'Failed to connect to wallet');
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const handleWalletResponse = async (responseData) => {
+  const handleWalletResponse = async (responseData: string): Promise<boolean> => {
     try {
+      if (typeof window === 'undefined' || !window.gc) {
+        throw new Error('GameChanger library not available');
+      }
+
       const resultObj = await window.gc.encodings.msg.decoder(responseData);
       
       if (resultObj.exports?.connect) {
-        const connectData = resultObj.exports.connect;
+        const connectData = resultObj.exports.connect as ConnectResponse;
         
         if (!connectData.data || !connectData.data.address) {
           throw new Error('Invalid wallet response');
@@ -151,36 +196,30 @@ const GameChangerWalletIntegration = () => {
       }
     } catch (error) {
       console.error('Error processing wallet response:', error);
-      setConnectionError(error.message || 'Failed to process wallet response');
+      setConnectionError(error instanceof Error ? error.message : 'Failed to process wallet response');
       return false;
     }
   };
 
-  const disconnectWallet = () => {
-    setWalletData(null);
-    setIsConnected(false);
-    localStorage.removeItem('walletConnection');
-  };
-
-  const openWalletInSameWindow = () => {
+  const openWalletInSameWindow = (): void => {
     if (walletUrl) {
       window.location.href = walletUrl;
     }
   };
 
-  const copyAddress = async () => {
+  const copyAddress = async (): Promise<void> => {
     if (walletData?.data?.address) {
       try {
         await navigator.clipboard.writeText(walletData.data.address);
         setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
+        setTimeout((): void => setCopySuccess(false), 2000);
       } catch (err) {
         console.error('Failed to copy address', err);
       }
     }
   };
 
-  const truncateAddress = (address) => {
+  const truncateAddress = (address: string | undefined): string => {
     if (!address) return '';
     return `${address.slice(0, 8)}...${address.slice(-8)}`;
   };
@@ -198,20 +237,7 @@ const GameChangerWalletIntegration = () => {
         <CardContent>
           {isConnected && walletData ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between bg-neutral-800 p-3 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="bg-green-500 h-2 w-2 rounded-full"></div>
-                  <span className="text-white font-medium">{walletData.data.name || 'GameChanger Wallet'}</span>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="bg-red-900/20 hover:bg-red-800/30 text-red-400 border-red-800/50"
-                  onClick={disconnectWallet}
-                >
-                  Disconnect
-                </Button>
-              </div>
+   
               
               <div className="space-y-3">
                 <div className="flex flex-col space-y-1">
@@ -221,7 +247,7 @@ const GameChangerWalletIntegration = () => {
                       {walletData.data.address}
                     </span>
                     <Button
-                      variant="ghost"
+                      variant="default"
                       size="sm"
                       className="ml-2 text-neutral-400 hover:text-white"
                       onClick={copyAddress}
@@ -302,15 +328,14 @@ const GameChangerWalletIntegration = () => {
       
       {isConnected && walletData && (
         <Tabs defaultValue="wallet-info" className="w-full">
-          <TabsList className="grid grid-cols-2 bg-neutral-900">
+          <TabsList className="grid grid-cols-1 bg-neutral-900">
             <TabsTrigger value="wallet-info">Wallet Info</TabsTrigger>
-           
           </TabsList>
           
           <TabsContent value="wallet-info" className="space-y-4 mt-4">
             <Card className="bg-neutral-900 border-neutral-700">
               <CardHeader>
-                <CardTitle className="text-lg text-white">Wallet Details</CardTitle>
+                <CardTitle className="text-lg text-white">Certificate Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {walletData.data.spendPubKey && (
@@ -335,7 +360,7 @@ const GameChangerWalletIntegration = () => {
                   </div>
                 )}
                 
-                {walletData.data.addressInfo && (
+                {walletData.data.addressInfo?.rewardAddress && (
                   <div className="flex flex-col space-y-1">
                     <span className="text-sm text-neutral-400">Reward Address</span>
                     <div className="bg-neutral-800 p-3 rounded-lg">
@@ -348,8 +373,6 @@ const GameChangerWalletIntegration = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
-     
         </Tabs>
       )}
 

@@ -5,7 +5,7 @@ import { useWallet } from '@/lib/walletProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Wallet2, Loader2, Wallet, ExternalLink } from 'lucide-react';
+import { CreditCard, Wallet2, Loader2, Wallet, ExternalLink, SendHorizontal } from 'lucide-react';
 import WalletAssetCard from '@/components/walletCard';
 import TransactionComponent from '@/components/transaction';
 import GameChangerWalletIntegration from '@/components/walletInfo';
@@ -36,6 +36,7 @@ export default function WalletPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<string>("all-assets");
   const balanceRefreshAttempted = useRef<boolean>(false);
 
   const hexToUtf8 = (hex: string): string => {
@@ -141,7 +142,7 @@ export default function WalletPage() {
       <div className="flex flex-col items-center justify-center py-12">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white">Wallet Not Connected</h1>
-          <p className="mt-4 text-zinc-400">Please connect your wallet to view your assets.</p>
+          <p className="mt-4 text-white">Please connect your wallet to view your assets.</p>
         </div>
       </div>
     );
@@ -154,10 +155,9 @@ export default function WalletPage() {
           <Wallet className="h-8 w-8 text-neutral-500" />
         </div>
         <h3 className="text-xl font-medium text-white mb-3">No Assets Found</h3>
-        <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+        <p className="text-white mb-6 max-w-md mx-auto">
           This wallet doesn't have any native tokens or NFTs. Asset tokens will appear here once you receive them.
         </p>
-
       </div>
     </Card>
   );
@@ -169,7 +169,7 @@ export default function WalletPage() {
           <ExternalLink className="h-8 w-8 text-red-400" />
         </div>
         <h3 className="text-xl font-medium text-white mb-3">Could Not Load Assets</h3>
-        <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+        <p className="text-white mb-6 max-w-md mx-auto">
           {fetchError || "There was an issue retrieving your assets. Please try again later."}
         </p>
         <Button
@@ -193,7 +193,7 @@ export default function WalletPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card className="bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 transition-colors">
           <CardHeader className="pb-2">
-            <CardTitle className="text-zinc-300 text-lg">Balance</CardTitle>
+            <CardTitle className="text-white text-lg">Balance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
@@ -211,7 +211,7 @@ export default function WalletPage() {
 
         <Card className="bg-neutral-800/50 border-neutral-700 hover:border-neutral-600 transition-colors">
           <CardHeader className="pb-2">
-            <CardTitle className="text-zinc-300 text-lg">Assets</CardTitle>
+            <CardTitle className="text-white text-lg">Assets</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center">
@@ -228,9 +228,11 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="all-assets" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 mb-6 bg-neutral-800/70">
-          <TabsTrigger value="all-assets">All Assets</TabsTrigger>
+      <Tabs defaultValue="all-assets" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3 mb-6 bg-neutral-800/70">
+          <TabsTrigger value="all-assets">Assets</TabsTrigger>
+          <TabsTrigger value="transactions">Send</TabsTrigger>
+          <TabsTrigger value="wallet-info">Wallet Config</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all-assets" className="space-y-6">
@@ -240,8 +242,8 @@ export default function WalletPage() {
             </h2>
             <Button
               size="sm"
-              variant="outline"
-              className="bg-black/20 border-neutral-700 hover:bg-black/40 text-zinc-300"
+              variant="default"
+              className="bg-black/50 border-neutral-700 hover:bg-black/40 text-neutral-500"
               onClick={() => {
                 setIsLoading(true);
                 setFetchError(null);
@@ -301,10 +303,25 @@ export default function WalletPage() {
             </div>
           )}
         </TabsContent>
-      </Tabs>
-    <GameChangerWalletIntegration/>
 
-    
+        <TabsContent value="transactions" className="space-y-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <SendHorizontal className="h-5 w-5 text-amber-400" />
+              Send Transaction
+            </h2>
+          </div>
+          
+          <TransactionComponent 
+            isWalletConnected={isConnected} 
+            walletAddress={walletData?.data.address || ''} 
+          />
+        </TabsContent>
+
+        <TabsContent value="wallet-info" className="space-y-6">
+          <GameChangerWalletIntegration />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

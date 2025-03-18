@@ -98,22 +98,9 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
           
           <div className="hidden md:flex flex-col items-end gap-2">
          
-            
-            <div className="font-mono text-sm flex items-center gap-3 text-white bg-black/20 py-1 px-3 rounded-lg border-l-2 border-amber-500/50">
-              <span className="flex items-center">
-                Net Status: 
-                <span
-                  className={`ml-1 ${isNetworkConnected ? 'text-green-500' : 'text-red-500'}`}
-                >
-                  {isNetworkConnected ? 'Up' : 'Down'}
-                </span>
-              </span>
-              <span className="border-l border-zinc-600 pl-2">
-                Epoch: <span className="text-amber-300">{epoch ?? '--'}</span>
-              </span>
-            </div>
+        
             <WalletConnectButton 
-              variant="outline" 
+              variant="default" 
               size="sm"
               className="border-nuetral-600 bg-black/30 hover:bg-neutral-800 hover:text-amber-400 transition-all duration-300 shadow-sm shadow-amber-500/20"
             />

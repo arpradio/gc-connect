@@ -141,7 +141,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
       {isConnected && isExpanded && (
         <div 
           ref={dropdownRef}
-          className="absolute right-0 z-50 w-full min-w-[300px] bg-sky-950 border border-amber-500/30 rounded-lg shadow-lg shadow-black/50 overflow-hidden top-full"
+          className="absolute right-0 z-50 w-full min-w-[300px] bg-netural-950 border border-amber-500/30 rounded-lg shadow-lg shadow-black/50 overflow-hidden top-full"
         >
           <div className="p-4 space-y-4">
             <div className="flex flex-col space-y-1">
@@ -167,7 +167,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
             </div>
             
             <div className="flex flex-col space-y-1">
-              <span className="text-xs text-zinc-400">Balance</span>
+              <span className="text-xs text-neutral-400">Balance</span>
               <div className="flex items-center justify-between bg-black/30 p-2 rounded-md">
                 <div className="flex items-center">
                   <CreditCard className="h-4 w-4 text-amber-400 mr-2" />
@@ -183,7 +183,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
                     onClick={handleWalletClick}
                     target='_blank'
                   >
-                    <Wallet className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
+                    <Wallet className="h-4 w-4 text-neutral-400 hover:text-amber-400" />
                   </Link>
                   <Link 
                     href={`https://cardanoscan.io/address/${walletData?.data.address}`}
@@ -192,7 +192,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
                     className="p-1 rounded-md hover:bg-black/40 transition-colors"
                     title="View on explorer"
                   >
-                    <ExternalLink className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
+                    <ExternalLink className="h-4 w-4 text-neutral-400 hover:text-amber-400" />
                   </Link>
                 </div>
               </div>

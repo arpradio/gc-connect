@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,18 +6,26 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight, AlertCircle, CheckCircle, Copy, ExternalLink } from 'lucide-react';
 
-const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
-  const [metadata, setMetadata] = useState('');
-  const [txModalOpen, setTxModalOpen] = useState(false);
-  const [txUrl, setTxUrl] = useState('');
-  const [txStatus, setTxStatus] = useState(null);
-  const [txHash, setTxHash] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [validationError, setValidationError] = useState('');
+interface TransactionComponentProps {
+  isWalletConnected: boolean;
+  walletAddress: string;
+}
+
+const TransactionComponent: React.FC<TransactionComponentProps> = ({ 
+  isWalletConnected, 
+  walletAddress 
+}) => {
+  const [recipient, setRecipient] = useState<string>('');
+  const [amount, setAmount] = useState<string>('');
+  const [metadata, setMetadata] = useState<string>('');
+  const [txModalOpen, setTxModalOpen] = useState<boolean>(false);
+  const [txUrl, setTxUrl] = useState<string>('');
+  const [txStatus, setTxStatus] = useState<'success' | 'error' | null>(null);
+  const [txHash, setTxHash] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string>('');
   
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     if (!recipient) {
       setValidationError('Recipient address is required');
       return false;
@@ -43,13 +50,16 @@ const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
     return true;
   };
   
-  // Convert ADA to Lovelace
-  const adaToLovelace = (ada) => {
-    return Math.round(parseFloat(ada) * 1000000).toString();
+  const adaToLovelace = (ada: string): string => {
+
+    const parsedAmount = parseFloat(ada);
+    if (isNaN(parsedAmount)) return "0";
+
+    const lovelace = Math.round(parsedAmount * 1000000);
+    return lovelace.toString();
   };
   
-  // Send transaction
-  const sendTransaction = async () => {
+  const sendTransaction = async (): Promise<void> => {
     if (!isWalletConnected) {
       setValidationError('Wallet not connected');
       return;
@@ -64,82 +74,128 @@ const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
     setTxHash('');
     
     try {
-      const txScript = {
-        "type": "script",
-        "title": "Send ADA",
-        "description": `Send ${amount} ADA to ${recipient}`,
-        "run": {
-          "tx": {
-            "type": "buildTx",
-            "tx": {
-              "outputs": [
+      const lovelaceAmount = adaToLovelace(amount);
+      
+      const txScript: {
+        type: string;
+        title: string;
+        description: string;
+        exportAs: string;
+        return: { mode: string };
+        returnURLPattern: string;
+        run: Record<string, unknown>;
+      } = {
+        type: "script",
+        title: "Send ADA",
+        description: `Send ${amount} ADA to ${recipient}`,
+        exportAs: "SendTransaction",
+        return: {
+          mode: "last"
+        },
+        returnURLPattern: window.location.origin + window.location.pathname,
+        run: {
+          stage1_build_transaction: {
+            type: "buildTx",
+            title: "Send ADA Transaction",
+            description: `Sending ${amount} ADA to ${recipient}`,
+            name: "Unsigned Transaction",
+            tx: {
+              outputs: [
                 {
-                  "address": recipient,
-                  "value": adaToLovelace(amount)
+                  address: recipient,
+                  assets: [
+                    {
+                      policyId: "ada",
+                      assetName: "ada",
+                      quantity: lovelaceAmount
+                    }
+                  ]
                 }
               ],
-              "auxiliaryData": metadata ? {
+              auxiliaryData: metadata ? {
                 "674": {
-                  "msg": metadata
+                  msg: metadata
                 }
               } : undefined
             }
           },
-          "sign": {
-            "type": "signTxs",
-            "txs": [
-              "{get('cache.tx.txHex')}"
+          stage2_sign_transaction: {
+            type: "signTxs",
+            namePattern: "Signed Transaction",
+            detailedPermissions: false,
+            txs: [
+              "{get('cache.stage1_build_transaction.txHex')}"
             ]
           },
-          "submit": {
-            "type": "submitTxs",
-            "txs": "{get('cache.sign')}"
+          stage3_submit_transaction: {
+            type: "submitTxs",
+            namePattern: "Submitted Transaction",
+            txs: "{get('cache.stage2_sign_transaction')}"
+          },
+          stage4_export_results: {
+            type: "macro",
+            run: "{get('cache.stage3_submit_transaction')}"
           }
         }
       };
       
-      const url = await window.gc.encode.url({
-        input: JSON.stringify(txScript),
-        apiVersion: "2",
-        network: "mainnet",
-        encoding: "gzip"
-      });
-      
-      setTxUrl(url);
-      setTxModalOpen(true);
-      
+      if (typeof window !== 'undefined' && window.gc) {
+        const url = await window.gc.encode.url({
+          input: JSON.stringify(txScript),
+          apiVersion: "2",
+          network: "mainnet",
+          encoding: "gzip"
+        });
+        
+        setTxUrl(url);
+        setTxModalOpen(true);
+      } else {
+        throw new Error('GameChanger Wallet library not loaded');
+      }
     } catch (error) {
       console.error('Error creating transaction:', error);
-      setValidationError(error.message || 'Failed to create transaction');
+      setValidationError(error instanceof Error ? error.message : 'Failed to create transaction');
     } finally {
       setIsProcessing(false);
     }
   };
   
-  const handleTransactionResponse = async (responseData) => {
+  const handleTransactionResponse = async (responseData: string): Promise<boolean> => {
     try {
       setIsProcessing(true);
       
-      const resultObj = await window.gc.encodings.msg.decoder(responseData);
-      
-      if (resultObj.exports?.submit?.[0]) {
-        const txHash = resultObj.exports.submit[0];
-        setTxHash(txHash);
-        setTxStatus('success');
-        return true;
-      } else if (resultObj.error) {
+      if (typeof window !== 'undefined' && window.gc) {
+        const resultObj = await window.gc.encodings.msg.decoder(responseData);
+        console.log('Transaction response:', resultObj);
+        
+        if (resultObj.exports?.SendTransaction) {
+          const txHash = Array.isArray(resultObj.exports.SendTransaction) 
+            ? resultObj.exports.SendTransaction[0] 
+            : resultObj.exports.SendTransaction;
+            
+          if (txHash) {
+            setTxHash(typeof txHash === 'string' ? txHash : String(txHash));
+            setTxStatus('success');
+            return true;
+          }
+        }
+        
+        if (resultObj.error) {
+          setTxStatus('error');
+          setValidationError(resultObj.error.message || 'Transaction failed');
+          return false;
+        }
+        
         setTxStatus('error');
-        setValidationError(resultObj.error.message || 'Transaction failed');
+        setValidationError('Unknown transaction response format');
         return false;
       } else {
-        setTxStatus('error');
-        setValidationError('Unknown transaction response');
-        return false;
+        throw new Error('GameChanger Wallet library not loaded');
       }
     } catch (error) {
       console.error('Error processing transaction response:', error);
       setTxStatus('error');
-      setValidationError(error.message || 'Failed to process transaction response');
+      setValidationError(error instanceof Error ? error.message : 'Failed to process transaction response');
       return false;
     } finally {
       setIsProcessing(false);
@@ -147,13 +203,13 @@ const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
     }
   };
   
-  const openTxInSameWindow = () => {
+  const openTxInSameWindow = (): void => {
     if (txUrl) {
       window.location.href = txUrl;
     }
   };
   
-  const copyTxHash = async () => {
+  const copyTxHash = async (): Promise<void> => {
     if (txHash) {
       try {
         await navigator.clipboard.writeText(txHash);
@@ -284,7 +340,6 @@ const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
         </CardFooter>
       </Card>
       
-      {/* Transaction Modal */}
       <Dialog open={txModalOpen} onOpenChange={setTxModalOpen}>
         <DialogContent className="bg-neutral-900 border-neutral-700 text-white">
           <DialogHeader>
@@ -296,7 +351,7 @@ const TransactionComponent = ({ isWalletConnected, walletAddress }) => {
           
           <div className="flex flex-col items-center justify-center space-y-4">
             <div className="bg-white p-4 rounded-lg" id="tx-qrcode-container">
-              {/* QR code will be inserted here */}
+
               {txUrl && (
                 <div className="bg-neutral-800 p-3 rounded-lg max-w-xs overflow-hidden text-xs text-neutral-300 break-all">
                   {txUrl}

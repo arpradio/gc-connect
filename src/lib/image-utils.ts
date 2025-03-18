@@ -2,10 +2,8 @@ import { getIPFSUrl } from '@/actions/ipfs';
 
 export type ImageSource = string | null | undefined;
 
-// Cache for IPFS URLs to avoid redundant transformations
 const ipfsCache = new Map<string, string>();
 
-// Check if URL is already a valid IPFS URL or contains a CID
 const isIPFSUrl = (src: string): boolean => {
   return (
     src.startsWith('ipfs://') ||
@@ -22,22 +20,21 @@ export const extractImage = async (metadata: any): Promise<string> => {
 
   if (typeof image === 'string') {
     if (image.startsWith('data:')) {
-      return image; // Data URLs can be returned immediately
+      return image;
     }
 
-    // Check cache first
+
     if (ipfsCache.has(image)) {
       return ipfsCache.get(image)!;
     }
 
     try {
-      // For potentially large images, set a timeout
       const timeout = new Promise<string>((_, reject) =>
         setTimeout(() => reject(new Error('IPFS URL resolution timeout')), 5000)
       );
 
       const url = await Promise.race([getIPFSUrl(image), timeout]);
-      ipfsCache.set(image, url); // Cache the result
+      ipfsCache.set(image, url);
       return url;
     } catch (error) {
       console.error('Error getting IPFS URL:', error);
@@ -48,14 +45,13 @@ export const extractImage = async (metadata: any): Promise<string> => {
   if (Array.isArray(image)) {
     const combinedImage = image.join("");
 
-    // Check cache first
     if (ipfsCache.has(combinedImage)) {
       return ipfsCache.get(combinedImage)!;
     }
 
     try {
       const url = await getIPFSUrl(combinedImage);
-      ipfsCache.set(combinedImage, url); // Cache the result
+      ipfsCache.set(combinedImage, url);
       return url;
     } catch (error) {
       console.error('Error getting IPFS URL:', error);
@@ -73,14 +69,13 @@ export const normalizeImageSrc = async (src: ImageSource): Promise<string> => {
     return src;
   }
 
-  // Check cache first
   if (ipfsCache.has(src)) {
     return ipfsCache.get(src)!;
   }
 
   try {
     const url = await getIPFSUrl(src);
-    ipfsCache.set(src, url); // Cache the result
+    ipfsCache.set(src, url);
     return url;
   } catch (error) {
     console.error('Error normalizing image source:', error);
@@ -88,7 +83,6 @@ export const normalizeImageSrc = async (src: ImageSource): Promise<string> => {
   }
 };
 
-// For components that need immediate values with async updates
 export const extractImageWithCallback = (
   metadata: any,
   callback: (url: string) => void
@@ -102,20 +96,16 @@ export const extractImageWithCallback = (
       return image;
     }
 
-    // Check cache first
     if (ipfsCache.has(image)) {
       const cachedUrl = ipfsCache.get(image)!;
-      // Still call the callback to ensure proper state updates
       setTimeout(() => callback(cachedUrl), 0);
       return cachedUrl;
     }
 
-    // For immediate display, return a best-guess URL if it's already in IPFS format
     const immediateDisplay = isIPFSUrl(image) ?
       `https://ipfs.io/ipfs/${image.replace('ipfs://', '')}` :
       '/default.png';
 
-    // Fetch the actual URL asynchronously
     getIPFSUrl(image)
       .then(url => {
         ipfsCache.set(image, url);
@@ -132,7 +122,6 @@ export const extractImageWithCallback = (
   if (Array.isArray(image)) {
     const combinedImage = image.join("");
 
-    // Check cache first
     if (ipfsCache.has(combinedImage)) {
       const cachedUrl = ipfsCache.get(combinedImage)!;
       setTimeout(() => callback(cachedUrl), 0);
@@ -165,14 +154,12 @@ export const normalizeImageSrcWithCallback = (
     return src;
   }
 
-  // Check cache first
   if (ipfsCache.has(src)) {
     const cachedUrl = ipfsCache.get(src)!;
     setTimeout(() => callback(cachedUrl), 0);
     return cachedUrl;
   }
 
-  // For immediate display, return a best-guess URL if it's already in IPFS format
   const immediateDisplay = isIPFSUrl(src) ?
     `https://ipfs.io/ipfs/${src.replace('ipfs://', '')}` :
     '/default.png';
