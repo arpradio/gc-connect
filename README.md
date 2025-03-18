@@ -1,5 +1,8 @@
+![gc](https://github.com/user-attachments/assets/adb0efc9-7df0-4f53-b58d-14baeaaee6d7)
 
-## Getting Started
+# GameChanger Wallet - dApp/website connector template | Next.js
+
+Getting Started
 
 First, clone the repo
 
