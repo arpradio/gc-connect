@@ -18,6 +18,8 @@ npm i
 
 ```
 
+edit the .env with your values (Blockfrost API key, etc)
+
 run dev server
 
 ```
