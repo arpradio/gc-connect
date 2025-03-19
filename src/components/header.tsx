@@ -3,7 +3,6 @@
 import React, { useState, useEffect, type FC } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { resolveEpochNo } from '@meshsdk/core';
 import { usePathname } from 'next/navigation';
 import WalletConnectButton from '@/components/walletButton';
 
@@ -21,26 +20,12 @@ const Header: FC = (): React.ReactElement => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-  const [epoch, setEpoch] = useState<number | null>(null);
-  const [isNetworkConnected, setIsNetworkConnected] = useState<boolean>(false);
 const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
   const toggleMenu = (): void => {
     setIsMenuOpen((prev) => !prev);
   };
 
-  useEffect(() => {
-    const fetchEpoch = async (): Promise<void> => {
-      try {
-        const currentEpoch = resolveEpochNo('mainnet') as number;
-        setEpoch(currentEpoch);
-        setIsNetworkConnected(!!currentEpoch);
-      } catch (error) {
-        setIsNetworkConnected(false);
-      }
-    };
-    
-    fetchEpoch();
-  }, []);
+
 
   useEffect(() => {
     const handleScroll = (): void => {
@@ -167,18 +152,7 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
             />
           </div>
           
-          <div className="mt-4 py-3 px-4 text-sm font-mono text-white bg-black/20 rounded-lg border-t border-b border-zinc-700/50">
-            <div className="flex items-center justify-between">
-              <span className="text-xs">Network Status:</span>
-              <span className={`px-2 py-0.5 rounded-full text-xs ${isNetworkConnected ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'}`}>
-                {isNetworkConnected ? 'Up' : 'Down'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <span>Current Epoch:</span>
-              <span className="text-amber-300 bg-amber-900/20 px-2 py-0.5 rounded-full text-xs">{epoch ?? '--'}</span>
-            </div>
-          </div>
+    
         </div>
       </div>
     </header>
