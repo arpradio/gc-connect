@@ -64,7 +64,7 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
   const network = process.env.CARDANO_NETWORK || 'mainnet';
 
   if (!apiKey) {
-    console.log('BLOCKFROST_API_KEY is not defined, returning mock data');
+    console.log('BLOCKFROST_API_KEY is not defined, returning null data');
     return {
       lovelace: 'NaN', 
     };

@@ -22,6 +22,7 @@ export default function Footer(): React.ReactElement {
       className="object-cover  border-neutral-500 border-[1px]"
       height={150}
       width={150}
+      title={process.env.NEXT_PUBLIC_COMPANY_NAME}
       priority
     />
   </div>

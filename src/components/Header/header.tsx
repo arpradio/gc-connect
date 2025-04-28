@@ -54,8 +54,9 @@ const Header: FC = (): React.ReactElement => {
               className='w-48 h-auto  '
               height={100} 
               width={100} 
-              src="/arpradio.webp" 
-              alt="Arp Radio" 
+              src={process.env.NEXT_PUBLIC_LOGO_SRC} 
+              alt={process.env.NEXT_PUBLIC_COMPANY_NAME}
+              title={process.env.NEXT_PUBLIC_COMPANY_NAME}
               priority
             />
           </Link>
@@ -68,7 +69,7 @@ const Header: FC = (): React.ReactElement => {
                     href={link.href}
                     className={`text-base font-medium transition-colors duration-200 hover:text-amber-400 relative ${
                       pathname === link.href 
-                        ? 'text-amber-400 font-bold' 
+                        ? 'text-cyan-400 font-bold' 
                         : 'text-zinc-300'
                     }`}
                   >
