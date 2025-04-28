@@ -1,39 +1,33 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { useWallet } from '@/app/providers/walletProvider';
 import { Button } from '@/components/ui/button';
 import { Wallet, AlertTriangle, Loader2 } from 'lucide-react';
 
-export default function Auth() {
-  const searchParams = useSearchParams();
+function LoginContent() {
   const router = useRouter();
   const { isConnected, connect, isConnecting, walletUrl } = useWallet();
-
   const [error, setError] = useState<string | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [connectionInProgress, setConnectionInProgress] = useState(false);
 
-  // Preserve or update return URL
+
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
     const rawRedirect = searchParams.get('redirect');
     const fallback = '/';
-    const redirect = rawRedirect ??
-      localStorage.getItem('walletReturnUrl') ??
-      fallback;
-
+    const redirect = rawRedirect ?? localStorage.getItem('walletReturnUrl') ?? fallback;
     localStorage.setItem('walletReturnUrl', redirect);
-  }, [searchParams]);
+  }, []);
 
-  // On mount, check existing session
   useEffect(() => {
     const checkSession = async () => {
       try {
         const response = await fetch('/api/wallet/session');
         if (response.ok) {
-          const savedUrl =
-            localStorage.getItem('walletReturnUrl') ?? '/';
+          const savedUrl = localStorage.getItem('walletReturnUrl') ?? '/';
           router.replace(savedUrl);
           return;
         }
@@ -47,7 +41,6 @@ export default function Auth() {
     checkSession();
   }, [router]);
 
-  // Redirect when connected
   useEffect(() => {
     if (isConnected) {
       const savedUrl = localStorage.getItem('walletReturnUrl') || '/';
@@ -55,7 +48,6 @@ export default function Auth() {
     }
   }, [isConnected, router]);
 
-  // Open wallet popup when URL is ready
   useEffect(() => {
     if (connectionInProgress && walletUrl) {
       window.open(
@@ -85,7 +77,6 @@ export default function Auth() {
     );
   };
 
-  // Hide modal when checking, connected, or while opening popup
   if (isCheckingSession || isConnected || connectionInProgress) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-slate-900/50">
@@ -160,5 +151,17 @@ export default function Auth() {
         A new window will open to complete the wallet connection process, which can be closed after completion.
       </p>
     </section>
+  );
+}
+
+export default function Auth() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen bg-slate-900/50">
+        <Loader2 className="h-12 w-12 text-amber-500 animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

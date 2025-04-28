@@ -35,7 +35,7 @@ const Home: FC = (): React.ReactElement => {
               <h1>{process.env.NEXT_PUBLIC_COMPANY_NAME}</h1>
               <h2>Cardano application leveraging GameChanger wallet!</h2>
               <div className="absolute  mx-auto inset-0 blur-md bg-neutral-500 rounded-full opacity-30 "> </div>
-<p className='h-full text-[1rem] p-12'>A cool paragraph about {process.env.NEXT_PUBLIC_COMPANY_NAME}!  Isn't this super cool, and not a total waste of time?!!!  We hope you agree!</p>
+<p className='h-full text-[1rem] p-12'>A cool paragraph about {process.env.NEXT_PUBLIC_COMPANY_NAME}!  Isn&apos;t this super cool, and not a total waste of time?!!!  We hope you agree!</p>
             </div>
             </span></div>
  

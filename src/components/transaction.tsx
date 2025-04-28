@@ -12,8 +12,7 @@ interface TransactionComponentProps {
 }
 
 const TransactionComponent: React.FC<TransactionComponentProps> = ({ 
-  isWalletConnected, 
-  walletAddress 
+  isWalletConnected
 }) => {
   const [recipient, setRecipient] = useState<string>('');
   const [amount, setAmount] = useState<string>('');
@@ -159,62 +158,7 @@ const TransactionComponent: React.FC<TransactionComponentProps> = ({
       setIsProcessing(false);
     }
   };
-  
-  const handleTransactionResponse = async (responseData: string): Promise<boolean> => {
-    try {
-      setIsProcessing(true);
-      
-      if (typeof window !== 'undefined' && window.gc) {
-        type TransactionResponse = {
-          exports?: {
-            SendTransaction?: string | string[];
-            [key: string]: unknown;
-          };
-          error?: {
-            message: string;
-            [key: string]: unknown;
-          };
-        };
-        
-        const resultObj = await window.gc.encodings.msg.decoder(responseData) as TransactionResponse;
-        console.log('Transaction response:', resultObj);
-        
-        if (resultObj.exports && 'SendTransaction' in resultObj.exports) {
-          const txResult = resultObj.exports.SendTransaction;
-          const txHash = Array.isArray(txResult) 
-            ? txResult[0] 
-            : txResult;
-            
-          if (txHash) {
-            setTxHash(typeof txHash === 'string' ? txHash : String(txHash));
-            setTxStatus('success');
-            return true;
-          }
-        }
-        
-        if (resultObj.error) {
-          setTxStatus('error');
-          setValidationError(resultObj.error.message || 'Transaction failed');
-          return false;
-        }
-        
-        setTxStatus('error');
-        setValidationError('Unknown transaction response format');
-        return false;
-      } else {
-        throw new Error('GameChanger Wallet library not loaded');
-      }
-    } catch (error) {
-      console.error('Error processing transaction response:', error);
-      setTxStatus('error');
-      setValidationError(error instanceof Error ? error.message : 'Failed to process transaction response');
-      return false;
-    } finally {
-      setIsProcessing(false);
-      setTxModalOpen(false);
-    }
-  };
-  
+    
   const openTxInSameWindow = (): void => {
     if (txUrl) {
       window.location.href = txUrl;

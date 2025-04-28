@@ -89,13 +89,6 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 const gcScript = {
   "title": `Connect to ${process.env.PUBLIC_URL}`,
   "description": "Connect your wallet using GameChanger!",
-  "require": {
-        "not": {
-            "walletTypeIn": [
-                "hardware"
-            ]
-        }
-      },
   "type": "script",
   "exportAs": "connect",
   "returnURLPattern": "http://localhost:3000/wallet/wallet-callback",
@@ -127,40 +120,6 @@ const gcScript = {
       "type": "signDataWithAddress",
       "address": "{get('cache.data.address')}",
       "dataHex": "{get('cache.hash')}"
-    }
-  }
-};
-
-const hwScript = {
-  "title": `Connect to ${process.env.NEXT_PUBLIC_COMPANY_NAME}`,
-  "description": "Connect your wallet using GameChanger!",
-  "require": {
-      "walletTypeIn": [
-          "hardware"
-      ]
-  },
-  "type": "script",
-  "exportAs": "connect",
-  "returnURLPattern": "http://localhost:3000/wallet/wallet-callback",
-  "run": {
-    "data": {
-      "type": "script",
-      "run": {
-        "name": {
-          "type": "getName"
-        },
-        "address": {
-          "type": "getCurrentAddress"
-        },
-        "addressInfo": {
-          "type": "macro",
-          "run": "{getAddressInfo(get('cache.data.address'))}"
-        },
-        "salt": {
-          "type": "macro",
-          "run": "{uuid()}"
-        }
-      }
     }
   }
 };
@@ -277,60 +236,56 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return () => window.removeEventListener('walletCallbackReceived', handleCallbackEvent);
   }, []);
 
-// Improved balance fetch function in walletProvider.tsx
-const refreshBalance = async (): Promise<void> => {
-  if (!walletData?.data.address) return;
+  const refreshBalance = async (): Promise<void> => {
+    if (!walletData?.data.address) return;
 
-  try {
-    // Add a small delay to ensure connection is established
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Add a timestamp to prevent caching
-    const timestamp = Date.now();
-    const balanceData = await fetchWalletBalance(`${walletData.data.address}?_t=${timestamp}`);
-    
-    if (!balanceData) return;
-    
-    if (balanceData.lovelace === "-1") {
-      console.warn("Session expired detected during balance refresh");
-      setSessionExpired(true);
-      setIsConnected(false);
-      setIsModalOpen(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const timestamp = Date.now();
+      const balanceData = await fetchWalletBalance(`${walletData.data.address}?_t=${timestamp}`);
+      
+      if (!balanceData) return;
+      
+      if (balanceData.lovelace === "-1") {
+        console.warn("Session expired detected during balance refresh");
+        setSessionExpired(true);
+        setIsConnected(false);
+        setIsModalOpen(true);
+        return;
+      }
+
+      const balanceInAda = parseInt(balanceData.lovelace) / 1000000;
+
+      const updatedWalletData = {
+        ...walletData,
+        data: {
+          ...walletData.data,
+          balance: balanceInAda,
+          assets: balanceData.assets,
+        },
+      };
+
+      setWalletData(updatedWalletData);
+      localStorage.setItem(
+        "walletConnection",
+        JSON.stringify(updatedWalletData)
+      );
+      
       return;
+    } catch (err) {
+      console.error("Failed to refresh balance:", err);
+
+      if (err instanceof Error && 
+          (err.message.includes("401") || 
+           err.message.toLowerCase().includes("unauthorized"))) {
+        setSessionExpired(true);
+        setIsConnected(false);
+        setIsModalOpen(true);
+      }
+      throw err;
     }
-
-    const balanceInAda = parseInt(balanceData.lovelace) / 1000000;
-
-    const updatedWalletData = {
-      ...walletData,
-      data: {
-        ...walletData.data,
-        balance: balanceInAda,
-        assets: balanceData.assets,
-      },
-    };
-
-    setWalletData(updatedWalletData);
-    localStorage.setItem(
-      "walletConnection",
-      JSON.stringify(updatedWalletData)
-    );
-    
-    return;
-  } catch (err) {
-    console.error("Failed to refresh balance:", err);
-
-    // Only set session expired if it's truly a 401 error
-    if (err instanceof Error && 
-        (err.message.includes("401") || 
-         err.message.toLowerCase().includes("unauthorized"))) {
-      setSessionExpired(true);
-      setIsConnected(false);
-      setIsModalOpen(true);
-    }
-    throw err;
-  }
-};
+  };
 
   useEffect(() => {
     const verifySession = async () => {
@@ -391,13 +346,12 @@ const refreshBalance = async (): Promise<void> => {
           throw new Error("Wallet response missing address data");
         }
         
-        // First fetch a minimal balance just to initialize the wallet
         const initialBalanceData = await fetchWalletBalance(connectData.data.address);
         const returnUrl = localStorage.getItem("walletReturnUrl") || "/";
         
         const initialBalanceInAda = initialBalanceData ? parseInt(initialBalanceData.lovelace) / 1000000 : 0;
   
-        let finalData = {
+        const finalData = {
           ...connectData,
           data: {
             ...connectData.data,
@@ -407,7 +361,6 @@ const refreshBalance = async (): Promise<void> => {
           lastActivity: new Date().toISOString(),
         };
         
-        // Set initial state and store in localStorage
         setWalletData(finalData);
         setIsConnected(true);
         localStorage.setItem("walletConnection", JSON.stringify(finalData));
@@ -415,7 +368,6 @@ const refreshBalance = async (): Promise<void> => {
         const sessionToken = createSessionToken(finalData);
   
         try {
-          // Send the wallet connection to the backend
           const response = await fetch("/api/wallet/connect", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -434,14 +386,12 @@ const refreshBalance = async (): Promise<void> => {
           const data = await response.json();
           
           if (data.success) {
-            // After successful connection, fetch complete balance immediately
             try {
               const completeBalanceData = await fetchWalletBalance(connectData.data.address);
               
               if (completeBalanceData) {
                 const balanceInAda = parseInt(completeBalanceData.lovelace) / 1000000;
                 
-                // Update wallet data with accurate balance
                 const updatedData = {
                   ...finalData,
                   data: {
@@ -457,7 +407,6 @@ const refreshBalance = async (): Promise<void> => {
               }
             } catch (balanceError) {
               console.error("Error fetching complete balance:", balanceError);
-              // Continue with initial balance if complete balance fetch fails
             }
             
             window.location.href = returnUrl;
@@ -488,17 +437,14 @@ const refreshBalance = async (): Promise<void> => {
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Handle both string messages and structured object messages
       if (event.origin !== window.location.origin) return;
       
-      // Handle string format (legacy)
       if (event.data && typeof event.data === 'string' && event.data.startsWith('gc:')) {
         const resultData = event.data.substring(3);
         handleWalletResponse(resultData);
         return;
       }
       
-      // Handle structured format (improved)
       if (event.data && typeof event.data === 'object' && event.data.type === 'gc_wallet_callback') {
         handleWalletResponse(event.data.result);
         return;
@@ -521,18 +467,18 @@ const refreshBalance = async (): Promise<void> => {
     };
   }, []);
 
-  const generateWalletUrl = async (scriptType: 'software' | 'hardware'): Promise<string | null> => {
+  const generateWalletUrl = async (): Promise<string | null> => {
     try {
       if (!window.gc || !window.gc.encode || !window.gc.encode.url) {
         throw new Error("GameChanger wallet library not available");
       }
 
       const scriptWithCurrentUrl = {
-        ...(scriptType === 'hardware' ? hwScript : gcScript),
+        ...gcScript,
         returnURLPattern: window.location.origin + "/wallet/wallet-callback",
       };
 
-      console.log(`Generating ${scriptType} wallet connection URL`);
+      console.log("Generating wallet connection URL");
       return await window.gc.encode.url({
         input: JSON.stringify(scriptWithCurrentUrl),
         apiVersion: "2",
@@ -540,7 +486,7 @@ const refreshBalance = async (): Promise<void> => {
         encoding: "gzip",
       });
     } catch (err) {
-      console.error(`Error generating ${scriptType} wallet URL:`, err);
+      console.error("Error generating wallet URL:", err);
       throw err;
     }
   };
@@ -566,7 +512,7 @@ const refreshBalance = async (): Promise<void> => {
       const currentUrl = window.location.href;
       localStorage.setItem("walletReturnUrl", currentUrl);
 
-      const softwalletUrl = await generateWalletUrl('software');
+      const softwalletUrl = await generateWalletUrl();
       
       if (softwalletUrl) {
         console.log("Wallet URL generated successfully");
@@ -584,13 +530,12 @@ const refreshBalance = async (): Promise<void> => {
 
   const connectWithSoftWallet = async () => {
     try {
-      const url = walletUrl || (sessionExpired ? await generateWalletUrl('software') : null);
+      const url = walletUrl || (sessionExpired ? await generateWalletUrl() : null);
       
       if (!url) {
         throw new Error("Failed to generate wallet URL");
       }
       
-      // Open the wallet URL, not a balance API endpoint
       const popup = window.open(
         url, 
         'wallet_popup',
@@ -609,6 +554,7 @@ const refreshBalance = async (): Promise<void> => {
       setError(err instanceof Error ? err : new Error(String(err)));
     }
   };
+
   const disconnect = (): void => {
     setWalletData(null);
     setIsConnected(false);
@@ -707,7 +653,7 @@ declare global {
           network: string;
           encoding: string;
         }) => Promise<string>;
-        qr?: (options: {
+        qr: (options: {
           input: string;
           apiVersion: string;
           network: string;
@@ -720,6 +666,11 @@ declare global {
           decoder: (resultRaw: string) => Promise<{
             exports?: {
               connect?: ConnectionData;
+              [key: string]: ConnectionData | undefined;
+            };
+            error?: {
+              message: string;
+              [key: string]: unknown;
             };
           }>;
         };

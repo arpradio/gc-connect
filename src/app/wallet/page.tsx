@@ -14,7 +14,10 @@ type AssetMetadata = {
   name?: string;
   description?: string;
   image?: string;
-  [key: string]: any;
+  genres?: string[];
+  duration?: string;
+  releaseTitle?: string;
+  [key: string]: unknown;
 };
 
 type Asset = {
@@ -31,10 +34,8 @@ export default function WalletPage() {
   const { isConnected, walletData, refreshBalance } = useWallet();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isBalanceLoading, setIsBalanceLoading] = useState<boolean>(false);
-  const [isFetchingAssets, setIsFetchingAssets] = useState<boolean>(false);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>("all-assets");
   const balanceRefreshAttempted = useRef<boolean>(false);
@@ -57,7 +58,6 @@ export default function WalletPage() {
         return;
       }
 
-      setIsFetchingAssets(true);
       setIsLoading(true);
       setFetchError(null);
 
@@ -83,31 +83,36 @@ export default function WalletPage() {
           if (response.status === 404 || response.status === 405) {
             setAssets([]);
             setIsLoading(false);
-            setIsFetchingAssets(false);
             return;
           }
 
           setFetchError(`Unable to fetch wallet assets (Status: ${response.status})`);
           setAssets([]);
           setIsLoading(false);
-          setIsFetchingAssets(false);
           return;
         }
 
         const data = await response.json();
 
         if (data.assets && Object.keys(data.assets).length > 0) {
-          const processedAssets: Asset[] = Object.entries(data.assets).map(([assetId, info]: [string, any]) => {
+          const processedAssets: Asset[] = Object.entries(data.assets).map(([assetId, info]) => {
             const quantity = walletData.data.assets?.[assetId] || 1;
-
+            
+            // Safe type assertion with proper checks
+            const assetInfo = info as Record<string, unknown>;
+            const metadata = (assetInfo.metadata || {}) as AssetMetadata;
+            const policyId = assetInfo.policyId as string || '';
+            const assetName = assetInfo.assetName as string || '';
+            const fingerprint = assetInfo.fingerprint as string || '';
+            
             return {
               assetId,
-              policyId: info.policyId,
-              assetName: info.assetName,
-              displayName: info.metadata.name || hexToUtf8(info.assetName),
+              policyId,
+              assetName,
+              displayName: metadata.name || hexToUtf8(assetName),
               quantity,
-              fingerprint: info.fingerprint,
-              metadata_json: info.metadata
+              fingerprint,
+              metadata_json: metadata
             };
           });
 
@@ -115,20 +120,19 @@ export default function WalletPage() {
         } else {
           setAssets([]);
         }
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name !== 'AbortError') {
           console.error('Error fetching assets:', error);
           setAssets([]);
-          setFetchError(error instanceof Error ? error.message : 'Failed to load assets');
+          setFetchError(error.message || 'Failed to load assets');
         }
       } finally {
         setIsLoading(false);
-        setIsFetchingAssets(false);
       }
     };
 
     fetchAssets();
-  }, [isConnected, walletData?.data.address, refreshBalance, refreshTrigger]);
+  }, [isConnected, walletData?.data.address, refreshBalance, refreshTrigger, walletData?.data.assets]);
 
   const formatAda = (amount: number | null | undefined): string => {
     if (amount === null || amount === undefined || isNaN(amount)) {
@@ -156,7 +160,7 @@ export default function WalletPage() {
         </div>
         <h3 className="text-xl font-medium text-white mb-3">No Assets Found</h3>
         <p className="text-white mb-6 max-w-md mx-auto">
-          This wallet doesn't have any native tokens or NFTs. Asset tokens will appear here once you receive them.
+          This wallet doesn&apos;t have any native tokens or NFTs. Asset tokens will appear here once you receive them.
         </p>
       </div>
     </Card>
@@ -306,7 +310,7 @@ export default function WalletPage() {
                 <WalletAssetCard
                   key={asset.assetId}
                   asset={asset}
-                  onClick={() => setSelectedAsset(asset)}
+                  onClick={() => {}}
                 />
               ))}
             </div>

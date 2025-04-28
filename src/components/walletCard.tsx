@@ -49,24 +49,7 @@ const WalletAssetCard: React.FC<WalletAssetCardProps> = ({ asset }) => {
 
           
           <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400 mb-4">
-            {metadata.genres.length > 0 && (
-              <div>
-                <span className="block text-zinc-500">Genre</span>
-                {metadata.genres.slice(0, 2).join(', ')}
-              </div>
-            )}
-            {metadata.duration && (
-              <div>
-                <span className="block text-zinc-500">Duration</span>
-                {metadata.duration}
-              </div>
-            )}
-            {metadata.releaseTitle && (
-              <div>
-                <span className="block text-zinc-500">Release</span>
-                {metadata.releaseTitle}
-              </div>
-            )}
+    
             {asset.quantity > 1 && (
               <div>
                 <span className="block text-zinc-300">Quantity</span>

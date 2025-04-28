@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -169,34 +169,6 @@ const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
     }
   };
 
-  const handleWalletResponse = async (responseData: string): Promise<boolean> => {
-    try {
-      if (typeof window === 'undefined' || !window.gc) {
-        throw new Error('GameChanger library not available');
-      }
-
-      const resultObj = await window.gc.encodings.msg.decoder(responseData);
-      
-      if (resultObj.exports?.connect) {
-        const connectData = resultObj.exports.connect as ConnectResponse;
-        
-        if (!connectData.data || !connectData.data.address) {
-          throw new Error('Invalid wallet response');
-        }
-        
-        setWalletData(connectData);
-        setIsConnected(true);
-        localStorage.setItem('walletConnection', JSON.stringify(connectData));
-        return true;
-      } else {
-        throw new Error('Invalid wallet connection data');
-      }
-    } catch (error) {
-      console.error('Error processing wallet response:', error);
-      setConnectionError(error instanceof Error ? error.message : 'Failed to process wallet response');
-      return false;
-    }
-  };
 
   const openWalletInSameWindow = (): void => {
     if (walletUrl) {
@@ -214,11 +186,6 @@ const GameChangerWalletIntegration: React.FC = (): React.ReactElement => {
         console.error('Failed to copy address', err);
       }
     }
-  };
-
-  const truncateAddress = (address: string | undefined): string => {
-    if (!address) return '';
-    return `${address.slice(0, 8)}...${address.slice(-8)}`;
   };
 
   return (

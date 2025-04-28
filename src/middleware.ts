@@ -9,6 +9,7 @@ export const config = {
     '/user/:path*', // Replace with actual (sub)route you wish to protect
     '/other', // Replace with actual route you wish to protect
     '/other/:path*', // Replace with actual (sub)route you wish to protect
+    '/wallet'
   ],
 };
 

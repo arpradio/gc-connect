@@ -2,16 +2,16 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
-const generateJwtSecret = (): Uint8Array => {
+const getJwtSecret = (): Uint8Array => {
   if (!process.env.JWT_SECRET) {
-    console.warn('No JWT_SECRET found. Generating a temporary secret.');
+    console.warn('No JWT_SECRET found in environment. Generating a temporary secret.');
     return crypto.randomBytes(32);
   }
   return new TextEncoder().encode(process.env.JWT_SECRET);
 };
 
-const JWT_SECRET = generateJwtSecret();
-const JWT_EXPIRATION = 60 * 60 * 2; 
+const JWT_SECRET = getJwtSecret();
+const JWT_EXPIRATION = 60 * 60 * 2; // 2 hours in seconds
 
 export interface SessionPayload {
   address: string;
@@ -19,6 +19,7 @@ export interface SessionPayload {
   name: string;
   exp?: number;
   iat?: number;
+  jti?: string;
 }
 
 export async function createSecureSessionToken(sessionData: {
@@ -26,14 +27,25 @@ export async function createSecureSessionToken(sessionData: {
   networkId: number;
   name: string;
 }): Promise<string> {
+  const tokenId = crypto.randomBytes(16).toString('hex');
+  const timestamp = Math.floor(Date.now() / 1000);
+  const expirationTime = timestamp + JWT_EXPIRATION;
+  
+  const tokenHash = crypto.createHash('sha256')
+    .update(`${sessionData.address}:${tokenId}:${timestamp}`)
+    .digest('hex');
+  
   return await new SignJWT({ 
     address: sessionData.address,
     networkId: sessionData.networkId,
     name: sessionData.name || 'Unknown Wallet',
+    jti: tokenHash
   })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('2h')
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+    .setIssuedAt(timestamp)
+    .setExpirationTime(expirationTime)
+    .setJti(tokenId)
+    .setNotBefore(timestamp)
     .sign(JWT_SECRET);
 }
 
@@ -43,8 +55,12 @@ export async function validateSession(token: string): Promise<boolean> {
       algorithms: ['HS256']
     });
 
+    if (!payload.address || !payload.jti) {
+      return false;
+    }
 
-    if (!payload.address) {
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < currentTime) {
       return false;
     }
 
@@ -75,9 +91,34 @@ export async function getSessionData(token?: string): Promise<SessionPayload | n
     const { payload } = await jwtVerify<SessionPayload>(token, JWT_SECRET, {
       algorithms: ['HS256']
     });
+    
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < currentTime) {
+      return null;
+    }
+    
     return payload;
   } catch (error) {
     console.error('Error extracting session data:', error);
+    return null;
+  }
+}
+
+export async function refreshSessionToken(token: string): Promise<string | null> {
+  try {
+    const sessionData = await getSessionData(token);
+    
+    if (!sessionData) {
+      return null;
+    }
+    
+    return await createSecureSessionToken({
+      address: sessionData.address,
+      networkId: sessionData.networkId,
+      name: sessionData.name
+    });
+  } catch (error) {
+    console.error('Error refreshing session token:', error);
     return null;
   }
 }
@@ -98,15 +139,29 @@ export async function validateSessionFromCookies(): Promise<boolean> {
   }
 }
 
+export function shouldRefreshToken(tokenPayload: SessionPayload): boolean {
+  if (!tokenPayload.exp) return true;
+  
+  const currentTime = Math.floor(Date.now() / 1000);
+  const timeRemaining = tokenPayload.exp - currentTime;
+  
+  return timeRemaining < (JWT_EXPIRATION / 4); // Refresh if less than 25% of lifetime remains
+}
+
 export function generateCsrfToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
 export function validateCsrfToken(providedToken: string, storedToken: string): boolean {
-  return crypto.timingSafeEqual(
-    Buffer.from(providedToken), 
-    Buffer.from(storedToken)
-  );
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(providedToken, 'hex'), 
+      Buffer.from(storedToken, 'hex')
+    );
+  } catch (error) {
+    console.error('CSRF token validation error:', error);
+    return false;
+  }
 }
 
 export class RateLimiter {
@@ -163,8 +218,8 @@ export function validateOrigin(origin: string | null): boolean {
   if (!origin) return false;
 
   const ALLOWED_ORIGINS = [
-    'https://arpradio.media',
-    'https://www.arpradio.media',
+    `https://${process.env.NEXT_PUBLIC_URL}`,
+    `https://www.${process.env.NEXT_PUBLIC_URL}`,
     process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null
   ].filter(Boolean);
 
