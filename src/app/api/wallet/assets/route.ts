@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getWalletAssets } from '@/lib/blockfrost';
+import { getWalletAssets } from '@/app/lib/blockfrost';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;

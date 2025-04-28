@@ -1,7 +1,7 @@
 import './globals.css';
 import type { ReactNode, FC } from 'react';
 import Script from 'next/script';
-import Header from '@/components/header';
+import Header from '@/components/Header/header';
 import Footer from '@/components/footer';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppProviders } from './providers/AppProviders';

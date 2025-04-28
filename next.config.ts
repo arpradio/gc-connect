@@ -1,7 +1,7 @@
-// @ts-check
+import type { NextConfig } from 'next';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
     images: {
       remotePatterns: [
         {
@@ -22,7 +22,9 @@ const nextConfig = {
       ],
     },
     experimental: {
-      serverActions: true,
+      serverActions: {
+        bodySizeLimit: '135mb',
+      },
     },
     typescript: {
       ignoreBuildErrors: true,

@@ -4,7 +4,7 @@ import React, { useState, useEffect, type FC } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import WalletConnectButton from '@/components/walletButton';
+import WalletConnectButton from '@/components/Header/walletButton';
 
 type NavLink = {
   readonly href: string;
@@ -13,19 +13,20 @@ type NavLink = {
 
 const navLinks: ReadonlyArray<NavLink> = [
   { href: '/', label: 'Home' },
-  { href: '/wallet', label: 'Wallet'},
+  { href: '/user', label: 'User' },
+  { href: '/other', label: 'Other' },
+  { href: '/wallet', label: 'Wallet'}
 ];
 
 const Header: FC = (): React.ReactElement => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
-const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
+ 
+
   const toggleMenu = (): void => {
     setIsMenuOpen((prev) => !prev);
   };
-
-
 
   useEffect(() => {
     const handleScroll = (): void => {
@@ -43,24 +44,24 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
   return (
     <header 
       className={`fixed top-0 left-0 w-full z-50 transition-all border-[1px] border-neutral-300/50 rounded duration-300 ${
-        scrolled ? 'bg-neutral-800 backdrop-blur-md shadow-lg' : 'bg-neutral-800'
+        scrolled ? 'bg-sky-950/95 backdrop-blur-md shadow-lg' : 'bg-zinc-800'
       } border-b border-zinc-700`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           <Link href="/" className="flex items-center">
             <Image 
-              className="h-[5rem]  border-neutral-500 border-[1px] w-auto" 
+              className='w-48 h-auto  '
               height={100} 
               width={100} 
-              src={logo}
-              alt="Logo" 
+              src="/arpradio.webp" 
+              alt="Arp Radio" 
               priority
             />
           </Link>
 
           <nav className="hidden md:block">
-            <ul className="flex space-x-8 bg-black/20 py-2 px-6 rounded border border-zinc-600/50 shadow-inner shadow-amber-900/10">
+            <ul className="flex space-x-8 bg-black/20 py-2 px-6 rounded-full border border-zinc-600/50 shadow-inner shadow-amber-900/10">
               {navLinks.map((link) => (
                 <li key={link.href}>
                   <Link 
@@ -83,11 +84,11 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
           
           <div className="hidden md:flex flex-col items-end gap-2">
          
-        
+ 
             <WalletConnectButton 
-      
-            
-              className="border-nuetral-600 bg-black/30 hover:bg-neutral-800 hover:text-amber-400 transition-all duration-300 shadow-sm shadow-amber-500/20"
+              variant="outline" 
+              size="sm"
+              className="border-zinc-600 bg-black/30 hover:bg-zinc-800 hover:text-amber-400 transition-all duration-300 shadow-sm shadow-amber-500/20"
             />
           </div>
 
@@ -130,7 +131,7 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
         </div>
       </div>
 
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden bg-sky-950/98 backdrop-blur-md border-t border-neutral-700`}>
+      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden bg-sky-950/98 backdrop-blur-md border-t border-zinc-700`}>
         <div className="px-4 pt-2 pb-4 space-y-1 sm:px-6">
           {navLinks.map((link) => (
             <Link 
@@ -148,13 +149,15 @@ const logo = process.env.NEXT_PUBLIC_LOGO_SRC as string | "/gc.png"
           
           <div className="pt-4 pb-2 px-4">
             <WalletConnectButton 
+              variant="outline"
               className="w-full border-zinc-600 bg-black/30 hover:bg-zinc-800 hover:text-amber-400 transition-all duration-300"
             />
           </div>
           
-    
+       
         </div>
       </div>
+
     </header>
   );
 };

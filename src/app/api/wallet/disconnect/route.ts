@@ -1,34 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const POST = async (request: NextRequest): Promise<NextResponse> => {
+function buildDisconnectResponse(): NextResponse {
+  const response = NextResponse.json({
+    success: true,
+    message: 'Wallet disconnected successfully'
+  });
+
+  response.cookies.delete('wallet_session');
+  response.cookies.delete('csrf_token');
+
+  return response;
+}
+
+export async function POST(_request: NextRequest) {
   try {
-    const sessionToken = request.cookies.get('wallet_session')?.value;
-
-    if (sessionToken) {
-
-      console.log('Wallet disconnected:', sessionToken);
-    }
-
-    const response = NextResponse.json(
-      { success: true, message: 'Wallet disconnected successfully' },
-      { status: 200 }
-    );
-
-    response.cookies.set({
-      name: 'wallet_session',
-      value: '',
-      httpOnly: true,
-      path: '/',
-      maxAge: 0
-    });
-
-    return response;
-
+    return buildDisconnectResponse();
   } catch (error) {
-    console.error('Error in wallet disconnection:', error);
+    console.error('[Wallet Disconnect][POST] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      {
+        success: false,
+        error: 'Failed to disconnect wallet'
+      },
       { status: 500 }
     );
   }
-};
+}
+
+export async function GET(_request: NextRequest) {
+  try {
+    return buildDisconnectResponse();
+  } catch (error) {
+    console.error('[Wallet Disconnect][GET] Error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to disconnect wallet'
+      },
+      { status: 500 }
+    );
+  }
+}

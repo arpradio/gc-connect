@@ -18,11 +18,11 @@ type BlockfrostAddressResponse = {
   script: boolean;
 };
 
+// Enhanced balance fetch API in wallet/balance/route.ts
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get('address');
-  const initialConnect = searchParams.get('initial') === 'true';
-
+  
   if (!address) {
     return NextResponse.json(
       { error: 'Address parameter is required' },
@@ -31,23 +31,34 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    if (initialConnect) {
-      console.log('Initial connect - using wallet provided balance');
-      return NextResponse.json({ lovelace: '0' });
-    }
+    // Remove any timestamp or cache-busting params
+    const cleanAddress = address.split('?')[0];
+    
+    console.log('Fetching balance data from Blockfrost for address:', cleanAddress);
+    const balance = await fetchAddressBalance(cleanAddress);
 
-    console.log('Fetching balance data from Blockfrost');
-    const balance = await fetchAddressBalance(address);
-    return NextResponse.json(balance);
-
+    // Add cache control headers to prevent browser caching
+    return NextResponse.json(balance, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (error) {
     console.error('Error fetching balance:', error);
     return NextResponse.json(
-      { lovelace: '0' } 
+      { lovelace: '0' },
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     );
   }
 }
-
 const fetchAddressBalance = async (address: string): Promise<AddressBalance> => {
   const apiKey = process.env.BLOCKFROST_API_KEY;
   const network = process.env.CARDANO_NETWORK || 'mainnet';
@@ -78,13 +89,11 @@ const fetchAddressBalance = async (address: string): Promise<AddressBalance> => 
       }
 
       console.error(`Blockfrost API error: ${response.status} ${response.statusText}`);
-      return { lovelace: 'NaN' };
+      return { lovelace: '0' };
     }
 
     const data = await response.json() as BlockfrostAddressResponse;
-
     const lovelace = data.amount.find(item => item.unit === 'lovelace')?.quantity || '0';
-
     const assets = data.amount
       .filter(item => item.unit !== 'lovelace')
       .reduce<Record<string, number>>((acc, item) => {
