@@ -132,7 +132,7 @@ const gcScript = {
 };
 
 const hwScript = {
-  "title": `Connect to ${process.env.PUBLIC_URL}`,
+  "title": `Connect to ${process.env.NEXT_PUBLIC_COMPANY_NAME}`,
   "description": "Connect your wallet using GameChanger!",
   "require": {
       "walletTypeIn": [

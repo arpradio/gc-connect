@@ -4,8 +4,8 @@ import { createSecureSessionToken } from '@/app/lib/auth';
 import crypto from 'crypto';
 
 const ALLOWED_ORIGINS = [
-  'https://arpradio.media',
-  'https://www.arpradio.media',
+  `https://${process.env.NEXT_PUPLIC_URL}`,
+  `https://www.${process.env.NEXT_PUPLIC_URL}`,
   process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null
 ].filter(Boolean);
 
@@ -109,15 +109,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     const allowedReturnUrls = [
-      'https://arpradio.media',
-      'https://www.arpradio.media',
+      `https://${process.env.NEXT_PUPLIC_URL}`,
+      `https://${process.env.NEXT_PUPLIC_URL}`,
       process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null
     ].filter(Boolean);
 
     const sanitizedReturnUrl =
       returnUrl && allowedReturnUrls.some(url => returnUrl.startsWith(url))
         ? returnUrl
-        : 'https://arpradio.media';
+        : `https://${process.env.NEXT_PUPLIC_URL}`;
 
     const response = NextResponse.json(
       {
