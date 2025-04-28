@@ -216,7 +216,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
                   
                   <button 
                     onClick={copyToClipboard}
-                    className="p-1 rounded-md hover:bg-black/40 transition-colors"
+                    className="p-1 rounded-md bg-transparent hover:bg-white/20 transition-colors"
                     title="Copy address"
                   >
                     {copySuccess ? 
@@ -231,28 +231,28 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
             <div className="flex flex-col space-y-1">
               <span className="text-xs text-zinc-400">Balance</span>
               <div className="flex items-center justify-between bg-black/30 p-2 rounded-md">
-                <div className="flex items-center">
+                <div className="flex items-center ">
                   <CreditCard className="h-4 w-4 text-amber-400 mr-2" />
                   <span className="text-lg font-medium text-white">
                    <Link href="/wallet"> {formatBalance(walletData?.data.balance)}</Link>
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center  gap-2">
                 <Link 
                     href="https://beta-wallet.gamechanger.finance/dashboard"
-                    className="p-1 rounded-md hover:bg-black/40 transition-colors"
+                    className="p-1 rounded-md transition-colors hover:bg-white/20"
                     title="Go to wallet"
                     onClick={handleWalletClick}
                     target='_blank'
                     
                   >
-                    <Wallet className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
+                    <Wallet className="h-4 w-4 text-zinc-400 hover:text-amber-400   " />
                   </Link>
                   <Link 
                     href={`https://cardanoscan.io/address/${walletData?.data.address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 rounded-md hover:bg-black/40 transition-colors"
+                    className="p-1 hover:bg-white/20 rounded-md  transition-colors"
                     title="View on explorer"
                   >
                     <ExternalLink className="h-4 w-4 text-zinc-400 hover:text-amber-400" />
