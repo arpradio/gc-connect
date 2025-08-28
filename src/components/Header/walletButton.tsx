@@ -172,9 +172,7 @@ const WalletConnectButton: FC<WalletConnectButtonProps> = ({
               <span>{truncateAddress(walletData.data.address)}</span>
             </div>
             <div className="flex items-center">
-              <div className="ml-2 pl-2 border-l border-zinc-600 font-medium text-amber-300">
-                {formatBalance(walletData.data.balance)}
-              </div>
+            
               <div 
                 ref={chevronRef}
                 onClick={handleChevronClick}

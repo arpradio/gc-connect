@@ -1,177 +1,149 @@
+// src/app/api/wallet/connect/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { validateWalletData, validateWalletConnection } from '@/app/lib/signature-verifier';
-import { createSecureSessionToken } from '@/app/lib/auth';
-import crypto from 'crypto';
+import { validateWalletConnection, validateWalletData } from '@/app/lib/signature-verifier';
 
-const ALLOWED_ORIGINS = [
-  `https://${process.env.NEXT_PUPLIC_URL}`,
-  `https://www.${process.env.NEXT_PUPLIC_URL}`,
-  process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null
-].filter(Boolean);
+interface ConnectRequest {
+  token: string;
+  wallet: {
+    address: string;
+    name: string;
+    networkId: number;
+  };
+  connectionData: any;
+  returnUrl: string;
+  isMobile: boolean;
+}
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest) {
   try {
-    const origin = request.headers.get('origin');
-    if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-      return NextResponse.json(
-        { success: false, error: 'Origin not allowed' },
-        { status: 403 }
-      );
-    }
+    const body: ConnectRequest = await request.json();
+    
+    console.log("API Connect - Received payload:", {
+      hasToken: !!body.token,
+      tokenLength: body.token?.length || 0,
+      walletAddress: body.wallet?.address ? '[PRESENT]' : '[MISSING]',
+      hasConnectionData: !!body.connectionData,
+      hasSignature: !!body.connectionData?.sign?.signature,
+      hasKey: !!body.connectionData?.sign?.key,
+      hasHash: !!body.connectionData?.hash,
+      dataStructure: body.connectionData ? Object.keys(body.connectionData) : [],
+      connectionDataType: typeof body.connectionData
+    });
 
-    const contentType = request.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
+    if (!body.connectionData || !body.wallet?.address) {
+      console.error("Missing connection data or wallet address");
       return NextResponse.json(
-        { success: false, error: 'Content-Type must be application/json' },
+        { success: false, error: "Missing connection data or wallet address" },
         { status: 400 }
       );
     }
 
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': origin || '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      });
-    }
+    // ✅ FIX 1: Basic validation first
+    const isValidData = validateWalletData(body.connectionData);
+    
+    console.log("Basic validation result:", {
+      isValid: isValidData,
+      hasData: !!body.connectionData.data,
+      hasAddress: !!body.connectionData.data?.address,
+      hasHash: !!body.connectionData.hash,
+      hasSign: !!body.connectionData.sign
+    });
 
-    let rawBody = '';
-    try {
-      const clonedReq = request.clone();
-      rawBody = await clonedReq.text();
-
-      if (!rawBody || rawBody.trim() === '') {
-        return NextResponse.json(
-          { success: false, error: 'Empty request body' },
-          { status: 400 }
-        );
-      }
-    } catch (error) {
-      console.error('[Wallet Connect] Failed to read request body:', error);
+    if (!isValidData) {
+      console.error("Wallet data validation failed");
       return NextResponse.json(
-        { success: false, error: 'Invalid request' },
+        { success: false, error: "Invalid wallet data structure" },
         { status: 400 }
       );
     }
 
-    let body;
-    try {
-      body = JSON.parse(rawBody);
-    } catch (error) {
-      console.error('[Wallet Connect] Invalid JSON in request body:', error);
+    // ✅ FIX 2: Signature validation
+    console.log("Starting signature validation...");
+    const signatureValidation = await validateWalletConnection(body.connectionData);
+    
+    console.log("Signature validation result:", {
+      isValid: signatureValidation.isValid,
+      message: signatureValidation.message,
+      environment: signatureValidation.environment,
+      walletName: signatureValidation.walletName,
+      networkId: signatureValidation.networkId
+    });
+
+    if (!signatureValidation.isValid) {
+      console.error("Signature validation failed:", signatureValidation.message);
       return NextResponse.json(
-        { success: false, error: 'Malformed request data' },
-        { status: 400 }
-      );
-    }
-
-    if (!body) {
-      return NextResponse.json(
-        { success: false, error: 'Missing request body' },
-        { status: 400 }
-      );
-    }
-
-    const { token, wallet, connectionData, returnUrl } = body;
-
-    if (!token || !wallet || !wallet.address) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request parameters' },
-        { status: 400 }
-      );
-    }
-
-    const isValid = validateWalletData(connectionData);
-
-    if (!isValid) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid wallet data' },
-        { status: 400 }
-      );
-    }
-
-    const validationResult = await validateWalletConnection(connectionData);
-
-    if (!validationResult.isValid) {
-      return NextResponse.json(
-        { success: false, error: `Signature validation failed: ${validationResult.message}` },
+        { success: false, error: `Signature validation failed: ${signatureValidation.message}` },
         { status: 401 }
       );
     }
 
-    const sessionToken = await createSecureSessionToken({
-      address: wallet.address,
-      networkId: wallet.networkId,
-      name: wallet.name
+    // ✅ FIX 3: Create session after successful verification
+    console.log("Creating wallet session...");
+    const sessionData = {
+      address: body.wallet.address,
+      name: body.wallet.name,
+      networkId: body.wallet.networkId,
+      token: body.token,
+      lastActivity: new Date().toISOString(),
+      verified: true,
+      connectedAt: new Date().toISOString()
+    };
+
+    console.log("Session data created:", {
+      address: sessionData.address ? '[PRESENT]' : '[MISSING]',
+      name: sessionData.name,
+      networkId: sessionData.networkId,
+      hasToken: !!sessionData.token,
+      verified: sessionData.verified
     });
 
-    const allowedReturnUrls = [
-      `https://${process.env.NEXT_PUPLIC_URL}`,
-      `https://${process.env.NEXT_PUPLIC_URL}`,
-      process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null
-    ].filter(Boolean);
+    // Create response
+    const response = NextResponse.json({ 
+      success: true, 
+      message: "Wallet connected successfully",
+      session: {
+        address: sessionData.address,
+        name: sessionData.name,
+        networkId: sessionData.networkId,
+        verified: sessionData.verified
+      }
+    });
 
-    const sanitizedReturnUrl =
-      returnUrl && allowedReturnUrls.some(url => returnUrl.startsWith(url))
-        ? returnUrl
-        : `https://${process.env.NEXT_PUPLIC_URL}`;
-
-    const response = NextResponse.json(
-      {
-        success: true,
-        message: 'Wallet connected successfully',
-        returnUrl: sanitizedReturnUrl
-      },
-      { status: 200 }
-    );
-
-    response.cookies.set('wallet_session', sessionToken, {
+    // ✅ FIX 4: Set secure session cookie
+    const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      path: '/',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 2
-    });
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict' as const,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
+    };
 
-    const csrfToken = crypto.randomUUID();
-    response.cookies.set('csrf_token', csrfToken, {
-      httpOnly: false,
-      secure: true,
-      path: '/',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 2
-    });
+    response.cookies.set('wallet_session', JSON.stringify(sessionData), cookieOptions);
+    
+    console.log("Session cookie set with options:", cookieOptions);
+    console.log("Wallet connection successful for address:", sessionData.address.substring(0, 8) + '...');
 
     return response;
+
   } catch (error) {
-    console.error('[Wallet Connect] Unexpected server error:', error);
+    console.error("API Connect Error:", error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 5).join('\n') // First 5 lines of stack
+      });
+    }
+    
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Something went wrong, please try again later'
+      { 
+        success: false, 
+        error: "Internal server error during wallet connection",
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
       },
       { status: 500 }
     );
   }
-}
-
-export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
-  const origin = request.headers.get('origin');
-
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
-    return new NextResponse(null, { status: 204 });
-  }
-
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': origin || '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400'
-    }
-  });
 }
